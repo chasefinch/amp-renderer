@@ -23,9 +23,6 @@ class AMPRenderer(HTMLParser, object):
 
     It can also strip comments and trim HTML attributes, if those flags are
     enabled.
-
-    SPECIAL CONSIDERATIONS:
-    For positioning of the AMP runtime, ...TODO
     """
 
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
