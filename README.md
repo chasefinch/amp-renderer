@@ -1,6 +1,6 @@
 # AMP Renderer
 
-Unofficial Python port of `server-side rendering <https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/>`_ from `AMP Optimizer <https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer>`_
+Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
 ## Usage
 
@@ -10,7 +10,7 @@ Install via:
 
 Minimal usage:
 
-Note that AMPRenderer inherits from `HTMLParser <https://docs.python.org/3/library/html.parser.html>`, and can be similarly extended.
+Note that AMPRenderer inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
 	from amp_renderer import AMPRenderer
 
@@ -32,7 +32,7 @@ Note that AMPRenderer inherits from `HTMLParser <https://docs.python.org/3/libra
 
 ## Caveats
 
-I wrote this for personal use, and while it produces valid, transformed AMP, there are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs are welcome.
+There are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs are welcome.
 
 - [x] Support `sizes`, `media`, and `heights` via CSS injection
 - [] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
