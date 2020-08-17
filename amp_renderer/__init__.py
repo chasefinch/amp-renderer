@@ -7,6 +7,7 @@ from HTMLParser import HTMLParser
 from builtins import bytes  # noqa
 from builtins import str  # noqa
 from collections import namedtuple
+from enum import Enum
 
 
 class AMPRenderer(HTMLParser, object):
