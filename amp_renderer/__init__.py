@@ -28,7 +28,7 @@ class AMPRenderer(HTMLParser, object):
 
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
     BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
-    TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
+    NOSCRIPT_BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
 
     _next_auto_id_num = 1
 
