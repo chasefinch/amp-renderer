@@ -2,9 +2,23 @@
 
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
-Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP runtime styles and, if possible, removes the AMP boilerplate styles.
+AMP Renderer performs the following optimizations:
+1. Server-side-render supported AMP HTML elements
+2. Insert the AMP Runtime Styles into the document
+3. Remove the AMP Boilerplate Styles, if possible
+4. Insert `img` tags for images with the data-hero attribute
 
-Boilerplate styles are removed except in the following cases:
+It also makes the following formatting updates:
+1. Remove empty `class` and `style` tags for AMP HTML elements
+2. Convert tag names and attribute names to lowercase
+3. Convert numerical attribute values to strings
+4. Use double quotes ("") for attributes, and escape double quotes inside attribute values
+5. If desired, removes comments (disabled by default)
+6. If desired, trims whitespace around HTML attribute values (disabled by default, and not always a good idea)
+
+AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP Runtime Styles and, if possible, removes the AMP Boilerplate Styles.
+
+Boilerplate styles can be removed except in the following cases:
 - An AMP element uses an unsupported layout
 - `amp-audio` is used
 - There is at least one `amp-experiment` tag in the document
@@ -39,26 +53,10 @@ Minimal usage:
 
 Remove comments and/or trim attributes:
 
-	from amp_renderer import AMPRenderer
-
-	...
-
-	original_html = """
-	    <!doctype html>
-	    <html ⚡>
-	      ...
-	    </html>
-	"""
-
 	renderer = AMPRenderer()
-
 	renderer.should_strip_comments = True
 	renderer.should_trim_attributes = True
-
 	renderer.feed(original_html)
-
-	print(renderer.result)
-
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
@@ -81,11 +79,11 @@ There are still some aspects of the official AMP Optimizer implementation that h
 
 The Python AMP Renderer does not insert `preload` links into the `head` of the DOM object for hero images; This can be done by hand for more control over the critical path.
 
-Since AMPRenderer adds the `amp-runtime` styles to the document, you can also use the [AMP Module Build](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites#amp-module-build-(coming-soon)) by hand. To take advantage of this, transform the import scripts such that imports like this:
+Since AMPRenderer adds the `amp-runtime` styles to the document, you can also use the [AMP Module Build](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites#amp-module-build-(coming-soon)) by hand. To take advantage of this, rewrite the import scripts such that imports like this:
 
 	<script async src="https://www.ampproject.org/v0.js"></script>
 
-become a 2-part import based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
+become 2-part imports based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
 
 	<script type="module" async src="https://www.ampproject.org/v0.mjs"></script>
 	<script nomodule async src="https://www.ampproject.org/v0.js"></script> 
