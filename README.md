@@ -3,10 +3,11 @@
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
 AMP Renderer performs the following optimizations:
-1. Server-side-render supported AMP HTML elements
+1. Inject the specific layout markup into AMP elements
 2. Insert the AMP Runtime Styles into the document
 3. Remove the AMP Boilerplate Styles, if possible
-4. Insert `img` tags for images with the data-hero attribute
+4. Mark the document as "transformed" with the appropriate tags on the `<html>` element
+5. Insert `img` tags for images with the data-hero attribute
 
 It also makes the following formatting updates:
 1. Remove empty `class` and `style` tags for AMP HTML elements
@@ -16,10 +17,10 @@ It also makes the following formatting updates:
 5. If desired, removes comments (disabled by default)
 6. If desired, trims whitespace around HTML attribute values (disabled by default, and not always a good idea)
 
-AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP Runtime Styles and, if possible, removes the AMP Boilerplate Styles.
+AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it will insert the AMP Runtime Styles and, if possible, remove the AMP Boilerplate Styles.
 
 Boilerplate styles can be removed except in the following cases:
-- An AMP element uses an unsupported layout
+- An AMP element uses an unsupported value for the `layout` attribute
 - `amp-audio` is used
 - There is at least one `amp-experiment` tag in the document
 - Any render-delaying extension is used. Currently this means:
