@@ -418,6 +418,12 @@ class AMPRenderer(HTMLParser, object):
 
             return attrs
 
+    RENDER_DELAYING_EXTENSIONS = [
+        'amp-dynamic-css-classes',
+        'amp-experiment',
+        'amp-story',
+    ]
+
     def __init__(self, runtime_styles, runtime_version, *args, **kwargs):
         super(AMPRenderer, self).__init__(*args, **kwargs)
 
@@ -467,9 +473,21 @@ class AMPRenderer(HTMLParser, object):
         if tag in ['template', 'script']:
             self._is_render_paused = True
 
+        if tag == 'script':
+            for attr in attrs:
+                if attr[0] == 'custom-element' and attr[1] in self.RENDER_DELAYING_EXTENSIONS:
+                    self._should_remove_boilerplate = False
+
         sizer = None
         maybe_img_attrs = None
-        if not self._is_render_paused and tag.startswith('amp-'):
+        if tag == 'amp-audio':
+            self._should_remove_boilerplate = False
+            safe_attrs = attrs
+
+        elif not self._is_render_paused and tag.startswith('amp-'):
+            if tag == 'amp-experiment':
+                self._should_remove_boilerplate = False
+
             amp_element = self.AMPNode(tag, attrs)
 
             try:
