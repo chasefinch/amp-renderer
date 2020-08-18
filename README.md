@@ -49,9 +49,9 @@ There are still some aspects of the official AMP Optimizer implementation that h
 - [ ] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
 
 ### Hero Images
-- [x] ~Inject `img` tag for hero images with the `data-hero` attribute~
-- [ ] Enforce 2-img limit on `data-hero`
+- [x] ~Inject `img` tag for `amp-img`s with the `data-hero` attribute~
+- [ ] Enforce 2-image limit on `data-hero`
 - [ ] Autodetect hero images
-- [ ] Support hero image functionality for `amp-iframe`, `amp-video`, or `amp-video-iframe`. Currently only `amp-img` is supported.
+- [ ] Support hero image functionality for `amp-iframe`, `amp-video`, and `amp-video-iframe`
 
 Also note that the Python AMP Renderer does not insert `preload` links into the `head` of the DOM object for hero images; This can be done by hand for more control over the critical path.
