@@ -2,6 +2,17 @@
 
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
+Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP runtime styles and, if possible, removes the AMP boilerplate styles.
+
+Boilerplate styles are removed except in the following cases:
+- An AMP element uses an unsupported layout
+- `amp-audio` is used
+- `amp-experiment` is included, and there is at least one `amp-experiment` tag in the document
+- Any render-delaying extension is used. Currently this means:
+  - `amp-dynamic-css-classes`
+  - `amp-experiment`
+  - `amp-story`
+
 ## Usage
 
 Install via:
@@ -25,17 +36,6 @@ Minimal usage:
 	renderer.feed(original_html)
 
 	print(renderer.result)
-
-Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP runtime styles and, if possible, removes the AMP boilerplate styles.
-
-Boilerplate styles are removed except in the following cases:
-- An AMP element uses an unsupported layout
-- `amp-audio` is used
-- `amp-experiment` is included, and there is at least one `amp-experiment` tag in the document
-- Any render-delaying extension is used. Currently this means:
-  - `amp-dynamic-css-classes`
-  - `amp-experiment`
-  - `amp-story`
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
