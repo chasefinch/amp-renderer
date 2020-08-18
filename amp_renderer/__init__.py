@@ -430,6 +430,9 @@ class AMPRenderer(HTMLParser, object):
         self.runtime_styles = runtime_styles
         self.runtime_version = runtime_version
 
+        self.should_trim_attrs = False
+        self.should_strip_comments = False
+
         # Always keep charrefs intact; This class is meant to reproduce HTML.
         self.convert_charrefs = False
 
@@ -445,9 +448,6 @@ class AMPRenderer(HTMLParser, object):
         self._is_in_noscript = False
 
         self._is_render_paused = False
-
-        self.should_trim_attrs = False
-        self.should_strip_comments = False
 
         self.result = ''
 
