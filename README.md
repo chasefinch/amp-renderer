@@ -26,7 +26,9 @@ Minimal usage:
 
 	print(renderer.result)
 
-Note that AMPRenderer inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
+Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full HTML document, it inserts the amp-runtime styles and, if possible, removes the AMP boilerplate styles.
+
+The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
 ## Caveats
 
@@ -34,6 +36,7 @@ There are still some aspects of the official AMP Optimizer implementation that h
 
 - [x] ~Support `sizes`, `media`, and `heights` via CSS injection~
 - [ ] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
+- [ ] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
 - [ ] Support `amp-audio`
 - [x] ~Inject `img` tag for hero images with the `data-hero` attribute~
 - [ ] Enforce 2-img limit on `data-hero`

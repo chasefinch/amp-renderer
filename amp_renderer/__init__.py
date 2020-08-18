@@ -27,6 +27,8 @@ class AMPRenderer(HTMLParser, object):
     """
 
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
+    BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
+    TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
 
     _next_auto_id_num = 1
 
@@ -52,12 +54,6 @@ class AMPRenderer(HTMLParser, object):
 
                 Sizes = namedtuple('Size', 'default other')  # noqa
                 sizes = Sizes(default=default, other=[])
-
-                """The user agent will pick a width from the sizes attribute,
-                using the first item with a <media-condition> (the part in
-                parentheses) that evaluates to true. This means, we have to
-                reverse the order the media queries in CSS to emulate this
-                behavior (the last definition has precedence)."""
 
                 Media = namedtuple('Media', 'query value')  # noqa
                 for size_value in size_values:
@@ -434,7 +430,14 @@ class AMPRenderer(HTMLParser, object):
     def reset(self):
         super(AMPRenderer, self).reset()
 
-        self._is_paused = False
+        self._should_remove_boilerplate = True
+
+        self._boilerplate = ''
+        self._is_in_boilerplate = False
+
+        self._noscript_boilerplate = ''
+        self._is_in_noscript = False
+
         self._is_render_paused = False
 
         self.should_trim_attrs = False
@@ -443,17 +446,25 @@ class AMPRenderer(HTMLParser, object):
         self.result = ''
 
     def handle_decl(self, decl):
-        if self._is_paused:
-            return
-
         self.result = '{}<!{}>'.format(self.result, decl.lower())
 
     def handle_starttag(self, tag, attrs):
-        if self._is_paused:
-            return
-
         tag = tag.lower()
-        if tag in ['template', 'style', 'script']:
+        if tag == 'noscript':
+            self._is_in_noscript = True
+
+        if tag == 'style':
+            if 'amp-boilerplate' in [attr[0] for attr in attrs]:
+                self._is_in_boilerplate = True
+
+                if self._is_in_noscript and self.NOSCRIPT_BOILERPLATE_PLACEHOLDER not in self.result:
+                    self.result = '{}{}'.format(self.result, self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
+                elif self.BOILERPLATE_PLACEHOLDER not in self.result:
+                    self.result = '{}{}'.format(self.result, self.BOILERPLATE_PLACEHOLDER)
+
+                return
+
+        if tag in ['template', 'script']:
             self._is_render_paused = True
 
         sizer = None
@@ -464,7 +475,7 @@ class AMPRenderer(HTMLParser, object):
             try:
                 transformation = amp_element.transform(self._next_auto_id_num)
             except self.AMPNode.TransformationError:
-                pass
+                self._should_remove_boilerplate = False
             else:
                 if transformation:
                     css, used_auto_id = transformation
@@ -543,54 +554,65 @@ class AMPRenderer(HTMLParser, object):
 
             self.result = '{}<img{}>'.format(self.result, img_attr_string)
 
-        if tag == 'style':
-            if 'amp-custom' in [attr[0] for attr in attrs] and self.TRANSLATED_STYLES_PLACEHOLDER not in self.result:
-                self.result = '{}{}'.format(self.result, self.TRANSLATED_STYLES_PLACEHOLDER)
-
-    def handle_endtag(self, tag):
-        if self._is_paused:
-            return
-
-        tag = tag.lower()
-
-        if tag in ['template', 'style', 'script']:
-            self._is_render_paused = False
-
-        self.result = '{}</{}>'.format(self.result, tag)
-
-    def handle_data(self, data):
-        if self._is_paused:
-            return
-
-        self.result = '{}{}'.format(self.result, data)
-
-    def handle_entityref(self, name):
-        if self._is_paused:
-            return
-
-        self.result = '{}{}'.format(self.result, '&{};'.format(name))
-
-    def handle_charref(self, name):
-        if self._is_paused:
-            return
-
-        self.result = '{}{}'.format(self.result, '&{};'.format(name))
-
-    def handle_comment(self, data):
-        if data.strip() == '/style-amp-boilerplate':
-            self._is_paused = False
-
-        elif self._is_paused:
-            return
-
-        elif data.strip() == 'style-amp-boilerplate':
-            self._is_paused = True
-
-        elif data.strip() == 'style-amp-runtime':
+        if tag == 'head':
             style = '<style amp-runtime i-amphtml-version="{}">{}</style>'.format(
                 self.runtime_version,
                 self.runtime_styles)
             self.result = '{}{}'.format(self.result, style)
 
-        elif not self.should_strip_comments:
+        if tag == 'style':
+            if 'amp-custom' in [attr[0] for attr in attrs] and self.TRANSLATED_STYLES_PLACEHOLDER not in self.result:
+                self.result = '{}{}'.format(self.result, self.TRANSLATED_STYLES_PLACEHOLDER)
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag == 'noscript':
+            self._is_in_noscript = False
+
+        if tag == 'style' and self._is_in_boilerplate:
+            self._is_in_boilerplate = False
+            return
+
+        if tag in ['template', 'script']:
+            self._is_render_paused = False
+
+        self.result = '{}</{}>'.format(self.result, tag)
+
+    def _add_data(self, data):
+        if self._is_in_boilerplate:
+            if self.is_in_noscript:
+                self._noscript_boilerplate = '{}{}'.format(self._noscript_boilerplate, data)
+                return
+
+            self._boilerplate = '{}{}'.format(self._boilerplate, data)
+            return
+
+        self.result = '{}{}'.format(self.result, data)
+
+    def handle_data(self, data):
+        self._add_data(data)
+
+    def handle_entityref(self, name):
+        self._add_data('&{};'.format(name))
+
+    def handle_charref(self, name):
+        self._add_data('&#{};'.format(name))
+
+    def handle_comment(self, data):
+        if not self.should_strip_comments:
             self.result = '{}<!--{}-->'.format(self.result, data)
+
+    def feed(self, data):
+        super(AMPRenderer, self).feed(data)
+
+        self.result = self.result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, '')
+
+        boilerplate = ''
+        noscript_boilerplate = ''
+        if not self._should_remove_boilerplate:
+            boilerplate = self._boilerplate
+            noscript_boilerplate = self._noscript_boilerplate
+            self.result = self.result.replace(' i-amphtml-no-boilerplate', '')
+
+        self.result = self.result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
+        self.result = self.result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
