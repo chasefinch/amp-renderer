@@ -43,10 +43,12 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 There are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs are welcome.
 
+### Dynamic attributes
 - [x] ~Support `sizes`, `media`, and `heights` via CSS injection~
 - [ ] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
 - [ ] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
-- [ ] Support `amp-audio`
+
+## Hero Images
 - [x] ~Inject `img` tag for hero images with the `data-hero` attribute~
 - [ ] Enforce 2-img limit on `data-hero`
 - [ ] Autodetect hero images
