@@ -26,7 +26,7 @@ Minimal usage:
 
 	print(renderer.result)
 
-Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full HTML document, it inserts the amp-runtime styles and, if possible, removes the AMP boilerplate styles.
+Python AMP Renderer can be used on a block of arbitrary HTML, but when used on a full document, it inserts the AMP runtime styles and, if possible, removes the AMP boilerplate styles.
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
