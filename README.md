@@ -3,10 +3,10 @@
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
 AMP Renderer performs the following optimizations:
-1. Inject the specific layout markup into AMP elements
+1. Inject the specific layout markup into each AMP element
 2. Insert the AMP Runtime Styles into the document
 3. Remove the AMP Boilerplate Styles, if possible
-4. Mark the document as "transformed" with the appropriate tags on the `<html>` element
+4. Mark the document as "transformed" with the appropriate tags on the `html` element
 5. Insert `img` tags for images with the data-hero attribute
 
 It also makes the following formatting updates:
@@ -54,10 +54,13 @@ Minimal usage:
 
 Remove comments and/or trim attributes:
 
-	renderer = AMPRenderer()
 	renderer.should_strip_comments = True
 	renderer.should_trim_attributes = True
 	renderer.feed(original_html)
+
+Reset:
+
+	renderer.reset()
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 

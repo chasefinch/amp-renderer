@@ -11,20 +11,7 @@ from enum import Enum
 
 
 class AMPRenderer(HTMLParser, object):
-    """A parser to ingest AMP HTML and perform various transformations.
-
-    This parser will:
-        (1) Server-side-render supported AMP HTML elements
-        (2) Insert `img` tags for images with the data-hero attribute
-        (3) Remove empty `class` and `style` tags for AMP HTML elements
-        (4) Convert tag names and attribute names to lowercase
-        (5) Convert numerical attribute values to strings
-        (6) Use double quotes ("") for attributes, and escape double quotes
-            inside attribute values
-
-    It can also strip comments and trim HTML attributes, if those flags are
-    enabled.
-    """
+    """A parser to ingest AMP HTML and perform various transformations."""
 
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
     BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
