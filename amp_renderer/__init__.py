@@ -580,7 +580,7 @@ class AMPRenderer(HTMLParser, object):
 
     def _add_data(self, data):
         if self._is_in_boilerplate:
-            if self.is_in_noscript:
+            if self._is_in_noscript:
                 self._noscript_boilerplate = '{}{}'.format(self._noscript_boilerplate, data)
                 return
 
