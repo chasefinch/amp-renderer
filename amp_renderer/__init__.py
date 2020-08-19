@@ -3,11 +3,19 @@ from __future__ import absolute_import, unicode_literals
 
 # Standard Library
 import re
-from HTMLParser import HTMLParser
+import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
 from collections import namedtuple
 from enum import Enum
+
+if sys.version_info[0] < 3:
+    # Third Party
+    from HTMLParser import HTMLParser
+
+else:
+    # Standard Library
+    from html.parser import HTMLParser
 
 
 class AMPRenderer(HTMLParser, object):
@@ -16,6 +24,12 @@ class AMPRenderer(HTMLParser, object):
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
     BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
     NOSCRIPT_BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
+
+    RENDER_DELAYING_EXTENSIONS = [
+        'amp-dynamic-css-classes',
+        'amp-experiment',
+        'amp-story',
+    ]
 
     _next_auto_id_num = 1
 
@@ -259,6 +273,9 @@ class AMPRenderer(HTMLParser, object):
 
                 translation = css, used_auto_id
 
+                for t in translations:
+                    del self._other_attrs[t]
+
             layout_value = self._other_attrs.get('layout')
 
             width = self._parse_length(self._other_attrs.get('width'))
@@ -405,13 +422,18 @@ class AMPRenderer(HTMLParser, object):
 
             return attrs
 
-    RENDER_DELAYING_EXTENSIONS = [
-        'amp-dynamic-css-classes',
-        'amp-experiment',
-        'amp-story',
-    ]
-
     def __init__(self, runtime_styles, runtime_version, *args, **kwargs):
+        """Initialize AMPRenderer with runtime styles & version.
+
+        Parameters:
+            runtime_styles (string): The current contents of
+                                     https://cdn.ampproject.org/v0.css
+
+            runtime_version (string): The version number for the runtime
+                                      styles as a string with leading zeros,
+                                      e.g. '012007302351001'
+
+        """
         super(AMPRenderer, self).__init__(*args, **kwargs)
 
         self.runtime_styles = runtime_styles
@@ -436,10 +458,10 @@ class AMPRenderer(HTMLParser, object):
 
         self._is_render_paused = False
 
-        self.result = ''
+        self._result = ''
 
     def handle_decl(self, decl):
-        self.result = '{}<!{}>'.format(self.result, decl.lower())
+        self._result = '{}<!{}>'.format(self._result, decl.lower())
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -447,13 +469,13 @@ class AMPRenderer(HTMLParser, object):
             self._is_in_noscript = True
 
         if tag == 'style':
-            if 'amp-boilerplate' in [attr[0] for attr in attrs]:
+            if 'amp-boilerplate' in (attr[0] for attr in attrs):
                 self._is_in_boilerplate = True
 
-                if self._is_in_noscript and self.NOSCRIPT_BOILERPLATE_PLACEHOLDER not in self.result:
-                    self.result = '{}{}'.format(self.result, self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
-                elif self.BOILERPLATE_PLACEHOLDER not in self.result:
-                    self.result = '{}{}'.format(self.result, self.BOILERPLATE_PLACEHOLDER)
+                if self._is_in_noscript and self.NOSCRIPT_BOILERPLATE_PLACEHOLDER not in self._result:
+                    self._result = '{}{}'.format(self._result, self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
+                elif self.BOILERPLATE_PLACEHOLDER not in self._result:
+                    self._result = '{}{}'.format(self._result, self.BOILERPLATE_PLACEHOLDER)
 
                 return
 
@@ -485,7 +507,7 @@ class AMPRenderer(HTMLParser, object):
                 if transformation:
                     css, used_auto_id = transformation
                     placeholder = self.TRANSLATED_STYLES_PLACEHOLDER
-                    self.result = self.result.replace(placeholder, '{}{}'.format(css, placeholder))
+                    self._result = self._result.replace(placeholder, '{}{}'.format(css, placeholder))
 
                     if used_auto_id:
                         self._next_auto_id_num += 1
@@ -516,7 +538,7 @@ class AMPRenderer(HTMLParser, object):
 
         attr_string = ''.join(attr_strings)
 
-        self.result = '{}<{}{}>'.format(self.result, tag, attr_string)
+        self._result = '{}<{}{}>'.format(self._result, tag, attr_string)
 
         if sizer:
             sizer_attr_strings = []
@@ -529,7 +551,7 @@ class AMPRenderer(HTMLParser, object):
                     sizer_attr_strings.append(' {}'.format(attr[0].lower()))
             sizer_attr_string = ''.join(sizer_attr_strings)
 
-            self.result = '{}<i-amphtml-sizer{}>'.format(self.result, sizer_attr_string)
+            self._result = '{}<i-amphtml-sizer{}>'.format(self._result, sizer_attr_string)
 
             if sizer.maybe_img_attrs is not None:
                 img_attr_strings = []
@@ -542,9 +564,9 @@ class AMPRenderer(HTMLParser, object):
                         img_attr_strings.append(' {}'.format(attr[0].lower()))
                 img_attr_string = ''.join(img_attr_strings)
 
-                self.result = '{}<img{}>'.format(self.result, img_attr_string)
+                self._result = '{}<img{}>'.format(self._result, img_attr_string)
 
-            self.result = '{}</i-amphtml-sizer>'.format(self.result)
+            self._result = '{}</i-amphtml-sizer>'.format(self._result)
 
         if maybe_img_attrs:
             img_attr_strings = []
@@ -557,17 +579,17 @@ class AMPRenderer(HTMLParser, object):
                     img_attr_strings.append(' {}'.format(attr[0].lower()))
             img_attr_string = ''.join(img_attr_strings)
 
-            self.result = '{}<img{}>'.format(self.result, img_attr_string)
+            self._result = '{}<img{}>'.format(self._result, img_attr_string)
 
         if tag == 'head':
             style = '<style amp-runtime i-amphtml-version="{}">{}</style>'.format(
                 self.runtime_version,
                 self.runtime_styles)
-            self.result = '{}{}'.format(self.result, style)
+            self._result = '{}{}'.format(self._result, style)
 
         if tag == 'style':
-            if 'amp-custom' in [attr[0] for attr in attrs] and self.TRANSLATED_STYLES_PLACEHOLDER not in self.result:
-                self.result = '{}{}'.format(self.result, self.TRANSLATED_STYLES_PLACEHOLDER)
+            if 'amp-custom' in (attr[0] for attr in attrs) and self.TRANSLATED_STYLES_PLACEHOLDER not in self._result:
+                self._result = '{}{}'.format(self._result, self.TRANSLATED_STYLES_PLACEHOLDER)
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -581,7 +603,7 @@ class AMPRenderer(HTMLParser, object):
         if tag in ['template', 'script']:
             self._is_render_paused = False
 
-        self.result = '{}</{}>'.format(self.result, tag)
+        self._result = '{}</{}>'.format(self._result, tag)
 
     def _add_data(self, data):
         if self._is_in_boilerplate:
@@ -592,7 +614,7 @@ class AMPRenderer(HTMLParser, object):
             self._boilerplate = '{}{}'.format(self._boilerplate, data)
             return
 
-        self.result = '{}{}'.format(self.result, data)
+        self._result = '{}{}'.format(self._result, data)
 
     def handle_data(self, data):
         self._add_data(data)
@@ -605,19 +627,23 @@ class AMPRenderer(HTMLParser, object):
 
     def handle_comment(self, data):
         if not self.should_strip_comments:
-            self.result = '{}<!--{}-->'.format(self.result, data)
+            self._result = '{}<!--{}-->'.format(self._result, data)
 
-    def feed(self, data):
-        super(AMPRenderer, self).feed(data)
+    def render(self, data):
+        self.reset()
+        self.feed(data)
+        self.close()
 
-        self.result = self.result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, '')
+        self._result = self._result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, '')
 
         boilerplate = ''
         noscript_boilerplate = ''
         if not self._should_remove_boilerplate:
             boilerplate = self._boilerplate
             noscript_boilerplate = self._noscript_boilerplate
-            self.result = self.result.replace(' i-amphtml-no-boilerplate', '')
+            self._result = self._result.replace(' i-amphtml-no-boilerplate', '')
 
-        self.result = self.result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
-        self.result = self.result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
+        self._result = self._result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
+        self._result = self._result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
+
+        return self._result

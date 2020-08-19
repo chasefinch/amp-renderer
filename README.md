@@ -14,8 +14,9 @@ It also makes the following formatting updates:
 2. Convert tag names and attribute names to lowercase
 3. Convert numerical attribute values to strings
 4. Use double quotes ("") for attributes, and escape double quotes inside attribute values
-5. If desired, removes comments (disabled by default)
-6. If desired, trims whitespace around HTML attribute values (disabled by default, and not always a good idea)
+5. Remove whitespace between html attributes
+6. If desired, removes comments (disabled by default)
+7. If desired, trims whitespace around HTML attribute values (disabled by default, and not always a good idea)
 
 AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it will insert the AMP Runtime Styles and, if possible, remove the AMP Boilerplate Styles.
 
@@ -48,19 +49,19 @@ Minimal usage:
 	"""
 
 	renderer = AMPRenderer()
-	renderer.feed(original_html)
+	result = renderer.render(original_html)
 
-	print(renderer.result)
+	print(result)
+
 
 Remove comments and/or trim attributes:
 
 	renderer.should_strip_comments = True
 	renderer.should_trim_attributes = True
-	renderer.feed(original_html)
+	result = renderer.render(original_html)
 
-Reset:
+	print(result)
 
-	renderer.reset()
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
