@@ -96,6 +96,9 @@ There are still some aspects of the official AMP Optimizer implementation that h
 - [ ] Autodetect hero images
 - [ ] Support hero image functionality for `amp-iframe`, `amp-video`, and `amp-video-iframe`
 
+### General
+- [ ] Extensive test suite
+
 ### Performance
 
 The Python AMP Renderer does not insert `preload` links into the `head` of the DOM object for hero images; This can be done by hand for more control over the critical path.

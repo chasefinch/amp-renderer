@@ -25,69 +25,69 @@ class RendererFactory:
         return renderer
 
 
-def test_basic():
-    basic_html = """
-        <!doctype html>
-        <html ⚡️>
-        <head>
+# content of test_class.py
+class TestRenderer:
+    def test_basic(self):
+        basic_html = """
+            <!doctype html>
+            <html ⚡️>
+            <head>
 
-        </head>
-        <body>
+            </head>
+            <body>
+                <div
+                    id="testDiv"
+                    class="testClass"
+                ></div>
+            </body>
+            </html>
+        """
+
+        expected_result = """
+            <!doctype html>
+            <html ⚡️ i-amphtml-layout i-amphtml-no-boilerplate transformed="self;v=1">
+            <head><style amp-runtime i-amphtml-version="{version}">{styles}</style>
+
+            </head>
+            <body>
+                <div id="testDiv" class="testClass"></div>
+            </body>
+            </html>
+        """.format(version=RUNTIME_VERSION, styles=RUNTIME_STYLES)
+
+        renderer = RendererFactory.make()
+        result = renderer.render(basic_html)
+
+        assert result == expected_result
+
+    def test_trim_attributes(self):
+        html = """
             <div
-                id="testDiv"
-                class="testClass"
-            ></div>
-        </body>
-        </html>
-    """
+                data-test-attribute=" Lovely!  "
+                [text]="
+                    myFavorites.color
+                "
+            >
+                Blue
+            </div>
+        """
 
-    expected_result = """
-        <!doctype html>
-        <html ⚡️ i-amphtml-layout i-amphtml-no-boilerplate transformed="self;v=1">
-        <head><style amp-runtime i-amphtml-version="{version}">{styles}</style>
+        expected_result = """
+            <div data-test-attribute="Lovely!" [text]="myFavorites.color">
+                Blue
+            </div>
+        """
 
-        </head>
-        <body>
-            <div id="testDiv" class="testClass"></div>
-        </body>
-        </html>
-    """.format(version=RUNTIME_VERSION, styles=RUNTIME_STYLES)
+        renderer = RendererFactory.make(should_trim_attrs=True)
+        result = renderer.render(html)
 
-    renderer = RendererFactory.make()
-    result = renderer.render(basic_html)
+        assert result == expected_result
 
-    assert result == expected_result
+    def test_strip_comments(self):
+        html = '<div><!-- This isn’t important. -->Hello there!</div>'
+        expected_result = '<div>Hello there!</div>'
 
+        renderer = RendererFactory.make(should_strip_comments=True)
+        result = renderer.render(html)
 
-def test_trim_attributes():
-    html = """
-        <div
-            data-test-attribute=" Lovely!  "
-            [text]="
-                myFavorites.color
-            "
-        >
-            Blue
-        </div>
-    """
-
-    expected_result = """
-        <div data-test-attribute="Lovely!" [text]="myFavorites.color">
-            Blue
-        </div>
-    """
-
-    renderer = RendererFactory.make(should_trim_attrs=True)
-    result = renderer.render(html)
-
-    assert result == expected_result
-
-
-def test_strip_comments():
-    html = '<div><!-- This isn’t important. -->Hello there!</div>'
-    expected_result = '<div>Hello there!</div>'
-
-    renderer = RendererFactory.make(should_strip_comments=True)
-    result = renderer.render(html)
-
-    assert result == expected_result
+        assert result == expected_result

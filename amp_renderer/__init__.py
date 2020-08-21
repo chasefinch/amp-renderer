@@ -311,7 +311,10 @@ class AMPNode:
             self._is_hidden = True
 
         elif layout == self.Layout.FIXED:
-            self._style = 'width:{wn}{wu};height:{hn}{hu}{existing_style}'.format(
+            if not all(isinstance(length, self.CSSLength) for length in [width, height]):
+                raise self.TransformationError('Length and width required for fixed layout')
+
+            self._style = 'width:{wn}{wu};height:{hn}{hu}{existing_style};'.format(
                 wn=width.numeral,
                 wu=width.unit.value,
                 hn=height.numeral,
@@ -319,20 +322,23 @@ class AMPNode:
                 existing_style=self._style)
 
         elif layout == self.Layout.FIXED_HEIGHT:
-            self._style = 'height:{numeral}{unit}{existing_style}'.format(
+            if not isinstance(height, self.CSSLength):
+                raise self.TransformationError('Length and width required for fixed layout')
+
+            self._style = 'height:{numeral}{unit}{existing_style};'.format(
                 numeral=height.numeral,
                 unit=height.unit.value,
                 existing_style=self._style)
 
         elif layout == self.Layout.FLEX_ITEM:
             if isinstance(height, self.CSSLength):
-                self._style = 'height:{numeral}{unit}{existing_style}'.format(
+                self._style = 'height:{numeral}{unit}{existing_style};'.format(
                     numeral=height.numeral,
                     unit=height.unit.value,
                     existing_style=self._style)
 
             if isinstance(width, self.CSSLength):
-                self._style = 'width:{numeral}{unit}{existing_style}'.format(
+                self._style = 'width:{numeral}{unit}{existing_style};'.format(
                     numeral=width.numeral,
                     unit=width.unit.value,
                     existing_style=self._style)
@@ -391,7 +397,7 @@ class AMPNode:
         return translation
 
     def get_attrs(self):
-        attrs = self._other_attrs.items()
+        attrs = list(self._other_attrs.items())
 
         if self.id:
             attrs.insert(0, ('id', self.id))
