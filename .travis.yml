@@ -1,7 +1,12 @@
 language: python
 python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
   - "3.6"
+  - "3.7"
 install:
-  - pip install -r requirements/test.txt
+  - pip install -r requirements/test.txt --use-feature=2020-resolver
 script:
-  make
+  if (( ${TRAVIS_PYTHON_VERSION%%.*} >= 3 )); then make; else make test; fi

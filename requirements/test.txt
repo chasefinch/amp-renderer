@@ -5,6 +5,7 @@ pytest
 
 isort
 flake8
+flake8
   pyflakes
   pep8
   pep8-naming

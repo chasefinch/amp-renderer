@@ -65,6 +65,20 @@ Remove comments and/or trim attributes:
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
+## Processing, Linting & Testing
+
+Sort imports (Requires Python >= 3.3):
+
+	# TODO
+
+Lint (Requires Python >= 3.3):
+
+	# TODO
+
+Test:
+
+	make test
+
 ## Discussion
 
 There are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs welcome.
