@@ -1,6 +1,6 @@
 # AMP Renderer
 
-[![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer)
+[![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
 
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
@@ -71,11 +71,11 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 Sort imports (Requires Python >= 3.4):
 
-	# TODO
+	make normal
 
 Lint (Requires Python >= 3.4):
 
-	# TODO
+	make lint
 
 Test:
 

@@ -1,6 +1,6 @@
-default: normalize lint test
+default: normal lint test
 
-normalize:
+normal:
 	isort .
 
 lint:
