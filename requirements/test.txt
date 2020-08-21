@@ -1,0 +1,19 @@
+-r base.txt
+
+coverage
+pytest
+
+isort
+flake8
+  pyflakes
+  pep8
+  pep8-naming
+  mccabe
+  flake8-coding
+  flake8-commas
+  flake8-comprehensions
+  flake8-docstrings
+    flake8-rst-docstrings
+  flake8-isort
+  flake8-quotes
+  flake8-print

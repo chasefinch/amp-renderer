@@ -1,7 +1,7 @@
 default: normalize lint test
 
 normalize:
-	isort -rc .
+	isort .
 
 lint:
 	flake8 .

@@ -27,4 +27,8 @@ setuptools.setup(
         'Operating System :: OS Independent',
     ],
     python_requires='>=2.7',
+    install_requires=[
+        'enum34;python_version<"3.4"',
+        'future;python_version<="2.7"',
+    ],
 )
