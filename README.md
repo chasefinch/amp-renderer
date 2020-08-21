@@ -67,7 +67,7 @@ Remove comments and/or trim attributes:
 
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
-## Processing, Linting & Testing
+## Testing, etc.
 
 Sort imports (Requires Python >= 3.4):
 
