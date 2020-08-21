@@ -97,6 +97,7 @@ There are still some aspects of the official AMP Optimizer implementation that h
 - [ ] Support hero image functionality for `amp-iframe`, `amp-video`, and `amp-video-iframe`
 
 ### General
+- [ ] Automatic runtime version management
 - [ ] Extensive test suite
 
 ### Performance
