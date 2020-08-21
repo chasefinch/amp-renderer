@@ -33,9 +33,9 @@ Boilerplate styles can be removed except in the following cases:
 
 ## Usage
 
-Install via:
+Install via PyPI:
 	
-	pip install git+https://github.com/chasefinch/amp-renderer
+	pip install amp-renderer
 
 Minimal usage:
 
