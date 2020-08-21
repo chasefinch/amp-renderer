@@ -1,6 +1,6 @@
 # AMP Renderer
 
-https://img.shields.io/badge/python-2.7%20%7C%203.4%2B-blue [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
+![Python 2.7 & 3.4+](https://img.shields.io/badge/python-2.7%20%7C%203.4%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
 
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
 
