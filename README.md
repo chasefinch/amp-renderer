@@ -69,11 +69,11 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 ## Processing, Linting & Testing
 
-Sort imports (Requires Python >= 3.3):
+Sort imports (Requires Python >= 3.4):
 
 	# TODO
 
-Lint (Requires Python >= 3.3):
+Lint (Requires Python >= 3.4):
 
 	# TODO
 
