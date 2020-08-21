@@ -43,6 +43,13 @@ Minimal usage:
 
 	...
 
+	RUNTIME_VERSION = "012345678" /* Current AMP Runtime version number */
+	RUNTIME_STYLES = "..." /* Current contents of https://cdn.ampproject.org/v0.css */
+
+	renderer = AMPRenderer(
+		runtime_version=RUNTIME_VERSION,
+		runtime_styles=RUNTIME_STYLES)
+
 	original_html = """
 	    <!doctype html>
 	    <html ⚡>
@@ -50,7 +57,6 @@ Minimal usage:
 	    </html>
 	"""
 
-	renderer = AMPRenderer()
 	result = renderer.render(original_html)
 
 	print(result)
