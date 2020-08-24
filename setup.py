@@ -17,6 +17,7 @@ setuptools.setup(
     author='Chase Finch',
     author_email='chase@finch.email',
     description='Unofficial Python port of server-side rendering from AMP Optimizer',
+    keywords=['AMP', 'server-side rendering'],
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/chasefinch/amp-renderer',

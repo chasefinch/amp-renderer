@@ -11,5 +11,5 @@ test:
 	coverage run --source=amp_renderer -m pytest
 	coverage report -m
 
-requirements:
+dev:
 	pip install -r requirements/development.txt
