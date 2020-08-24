@@ -2,13 +2,13 @@
 from __future__ import absolute_import, unicode_literals
 
 # Standard Library
+import json
 import re
 import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
 from collections import namedtuple
 from enum import Enum
-import json
 
 if sys.version_info[0] < 3:
     # Third Party

@@ -2,12 +2,14 @@
 from __future__ import absolute_import, unicode_literals
 
 # Standard Library
-from builtins import bytes  # noqa
-from builtins import str  # noqa
 import os
 import re
-import pytest
+from builtins import bytes  # noqa
+from builtins import str  # noqa
 from html.parser import HTMLParser
+
+# Third Party
+import pytest
 
 # AMP Renderer
 from amp_renderer import AMPRenderer
@@ -146,9 +148,6 @@ class TestSpec:
         # Boot renderer in test mode to match the AMP Optimizer spec
         renderer = AMPRenderer(runtime_version=None, runtime_styles=None)
         result = renderer.render(html)
-
-        print(self._format(result))
-        print(self._format(expected))
 
         assert self._format(result) == self._format(expected)
 
