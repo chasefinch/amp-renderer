@@ -12,4 +12,4 @@ test:
 	coverage report -m
 
 dev:
-	pip install -r requirements/development.txt
+	pip install -r requirements/dev.txt
