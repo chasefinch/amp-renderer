@@ -8,7 +8,7 @@ AMP Renderer performs the following optimizations:
 1. Inject the specific layout markup into each AMP element
 2. Insert the AMP runtime styles into the document
 3. Remove the AMP boilerplate styles, if possible
-4. Mark the document as "transformed" with the appropriate tags on the `html` element
+4. Mark the document as “transformed” with the appropriate tags on the `html` element
 5. Insert `img` tags for images with the data-hero attribute
 
 It also makes the following formatting updates:
@@ -91,7 +91,7 @@ Test:
 There are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs welcome.
 
 ### General
-- [x] Tested against AMP Optimizer's ServerSideRendering spec
+- [x] ~Tested against AMP Optimizer’s ServerSideRendering spec~
 - [ ] Automatic runtime version management
 
 ### Dynamic attributes
