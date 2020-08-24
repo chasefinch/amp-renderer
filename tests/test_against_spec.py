@@ -2,17 +2,26 @@
 from __future__ import absolute_import, unicode_literals
 
 # Standard Library
+import codecs
 import os
 import re
+import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
-from html.parser import HTMLParser
 
 # Third Party
 import pytest
 
 # AMP Renderer
 from amp_renderer import AMPRenderer
+
+if sys.version_info[0] < 3:
+    # Third Party
+    from HTMLParser import HTMLParser
+
+else:
+    # Standard Library
+    from html.parser import HTMLParser
 
 
 class OutputNormalizer(HTMLParser, object):
@@ -136,10 +145,10 @@ class TestSpec:
         input_path = '{}/spec/{}/input.html'.format(local_path, spec)
         output_path = '{}/spec/{}/expected_output.html'.format(local_path, spec)
 
-        with open(input_path, 'r') as html_file:
+        with codecs.open(input_path, 'r', encoding='utf-8') as html_file:
             html = html_file.read()
 
-        with open(output_path, 'r') as html_file:
+        with codecs.open(output_path, 'r', encoding='utf-8') as html_file:
             expected_output = html_file.read()
 
         normalizer = OutputNormalizer()
