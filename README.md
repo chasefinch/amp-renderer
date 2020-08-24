@@ -1,8 +1,8 @@
 # AMP Renderer
 
-![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.4%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
+![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
 
-Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer).
+Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Tested in Python 3.5 and above, but also supports Python 2.7.
 
 AMP Renderer performs the following optimizations:
 1. Inject the specific layout markup into each AMP element
@@ -75,11 +75,11 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 ## Testing, etc.
 
-Sort imports (Requires Python >= 3.4):
+Sort imports (Requires Python >= 3.5):
 
 	make normal
 
-Lint (Requires Python >= 3.4):
+Lint (Requires Python >= 3.5):
 
 	make lint
 
@@ -91,6 +91,10 @@ Test:
 
 There are still some aspects of the official AMP Optimizer implementation that haven’t been addressed yet. PRs welcome.
 
+### General
+- [x] Tested against AMP Optimizer's ServerSideRendering spec
+- [ ] Automatic runtime version management
+
 ### Dynamic attributes
 - [x] ~Support `sizes`, `media`, and `heights` via CSS injection~
 - [ ] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
@@ -101,10 +105,6 @@ There are still some aspects of the official AMP Optimizer implementation that h
 - [ ] Enforce 2-image limit on `data-hero`
 - [ ] Autodetect hero images
 - [ ] Support hero image functionality for `amp-iframe`, `amp-video`, and `amp-video-iframe`
-
-### General
-- [ ] Automatic runtime version management
-- [ ] Extensive test suite
 
 ### Performance
 
