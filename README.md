@@ -1,13 +1,13 @@
 # AMP Renderer
 
-![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-67%25-yellow)
+![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=master)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-87%25-green)
 
 Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Tested in Python 3.5 and above, but also supports Python 2.7.
 
 AMP Renderer performs the following optimizations:
 1. Inject the specific layout markup into each AMP element
-2. Insert the AMP Runtime Styles into the document
-3. Remove the AMP Boilerplate Styles, if possible
+2. Insert the AMP runtime styles into the document
+3. Remove the AMP boilerplate styles, if possible
 4. Mark the document as "transformed" with the appropriate tags on the `html` element
 5. Insert `img` tags for images with the data-hero attribute
 
@@ -20,15 +20,14 @@ It also makes the following formatting updates:
 6. If desired, removes comments (disabled by default)
 7. If desired, trims whitespace around HTML attribute values (disabled by default, and not always a good idea)
 
-AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it will insert the AMP Runtime Styles and, if possible, remove the AMP Boilerplate Styles.
+AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it will insert the AMP runtime styles and, if possible, remove the AMP boilerplate styles.
 
 Boilerplate styles can be removed except in the following cases:
 - An AMP element uses an unsupported value for the `layout` attribute
 - `amp-audio` is used
-- There is at least one `amp-experiment` tag in the document
+- There is at least one `amp-experiment` active
 - Any render-delaying extension is used. Currently this means:
   - `amp-dynamic-css-classes`
-  - `amp-experiment`
   - `amp-story`
 
 ## Usage
@@ -43,7 +42,7 @@ Minimal usage:
 
 	...
 
-	RUNTIME_VERSION = "012345678" /* Current AMP Runtime version number */
+	RUNTIME_VERSION = "012345678" /* Current AMP runtime version number */
 	RUNTIME_STYLES = "..." /* Current contents of https://cdn.ampproject.org/v0.css */
 
 	renderer = AMPRenderer(
