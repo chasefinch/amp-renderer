@@ -13,7 +13,7 @@ jobs:
       with:
         python-version: 3.7
     - name: Install twine
-    - run: >-
+      run: >-
         python3 -m pip install --user --upgrade twine
         python3 -m twine upload --repository pypi dist/*
     - name: Publish distribution 📦 to PyPI
