@@ -241,10 +241,7 @@ class AMPNode:
 
         translations = [k for k in self._other_attrs if k in self.TRANSLATIONS]
         if translations:
-            used_auto_id = False
-            if not self.id:
-                self.id = '{}{}'.format(self.ID_PREFIX, next_auto_id_num)
-                used_auto_id = True
+            potential_id = self.id or '{}{}'.format(self.ID_PREFIX, next_auto_id_num)
 
             css_parts = []
             for t in translations:
@@ -262,12 +259,17 @@ class AMPNode:
                 attribute_value = self._other_attrs[t]
                 Translator = self.TRANSLATIONS[t]  # noqa
 
-                css_part = Translator.make_translated_css(attribute_value, self.id)
+                css_part = Translator.make_translated_css(attribute_value, potential_id)
                 if css_part:
                     css_parts.append(css_part)
 
             css = ''.join(css_parts)
             if css:
+                used_auto_id = False
+                if not self.id:
+                    used_auto_id = True
+                    self.id = potential_id
+
                 translation = css, used_auto_id
 
             for t in translations:
