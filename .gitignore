@@ -3,4 +3,4 @@
 .coverage
 py2/
 amp_renderer.egg-info
-build
+build/
