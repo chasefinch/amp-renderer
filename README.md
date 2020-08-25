@@ -11,7 +11,7 @@ AMP Renderer performs the following optimizations:
 4. Mark the document as “transformed” with the appropriate tags on the `html` element
 5. Insert `img` tags for images with the data-hero attribute
 
-It also makes the following formatting updates:
+It also makes these formatting updates:
 1. Remove empty `class` and `style` tags for AMP HTML elements
 2. Convert tag names and attribute names to lowercase
 3. Convert numerical attribute values to strings
@@ -22,7 +22,7 @@ It also makes the following formatting updates:
 
 AMPRenderer can be used on a block of arbitrary HTML, but when used on a full document, it will insert the AMP runtime styles and, if possible, remove the AMP boilerplate styles.
 
-Boilerplate styles can be removed except in the following cases:
+Boilerplate styles can be removed except in these cases:
 - An AMP element uses an unsupported value for the `layout` attribute
 - `amp-audio` is used
 - There is at least one `amp-experiment` active
