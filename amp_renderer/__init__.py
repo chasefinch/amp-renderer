@@ -492,6 +492,11 @@ class AMPRenderer(HTMLParser, object):
         self._next_auto_id_num = 0
         self._translated_styles = ''
 
+        try:
+            del self.no_boilerplate
+        except AttributeError:
+            pass
+
     def _apply_experiment_data(self):
         self._result = '{}{}'.format(self._result, self._current_experiment_data)
 
@@ -743,7 +748,10 @@ class AMPRenderer(HTMLParser, object):
 
         boilerplate = ''
         noscript_boilerplate = ''
+
+        self.no_boilerplate = True
         if self._is_render_cancelled or not self._should_remove_boilerplate:
+            self.no_boilerplate = False
             boilerplate = '<style amp-boilerplate>{}</style>'.format(self._boilerplate)
             noscript_boilerplate = '<style amp-boilerplate>{}</style>'.format(self._noscript_boilerplate)
             self._result = self._result.replace(' i-amphtml-no-boilerplate', '')

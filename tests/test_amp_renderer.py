@@ -59,6 +59,7 @@ class TestRenderer:
         result = renderer.render(basic_html)
 
         assert result == expected_result
+        assert renderer.no_boilerplate
 
     def test_trim_attributes(self):
         html = """
@@ -82,6 +83,7 @@ class TestRenderer:
         result = renderer.render(html)
 
         assert result == expected_result
+        assert renderer.no_boilerplate
 
     def test_strip_comments(self):
         html = '<div><!-- This isn’t important. -->Hello there!</div>'
@@ -91,3 +93,4 @@ class TestRenderer:
         result = renderer.render(html)
 
         assert result == expected_result
+        assert renderer.no_boilerplate
