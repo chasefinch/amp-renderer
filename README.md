@@ -32,7 +32,7 @@ Boilerplate styles can be removed except in the following cases:
 
 ## Usage
 
-If using Django, you can automatically apply AMPRenderer via middleware with [Django AMP Renderer](https://github.com/chasefinch/django-amp-renderer).
+If using Django, you can use the [Django AMP Renderer middleware](https://github.com/chasefinch/django-amp-renderer).
 
 Otherwise, install via PyPI:
 	
