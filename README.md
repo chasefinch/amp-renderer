@@ -115,7 +115,7 @@ Since AMPRenderer adds the `amp-runtime` styles to the document, you can also us
 
 	<script async src="https://www.ampproject.org/v0.js"></script>
 
-become 2-part imports based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
+...become 2-part imports based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
 
 	<script type="module" async src="https://www.ampproject.org/v0.mjs"></script>
 	<script nomodule async src="https://www.ampproject.org/v0.js"></script> 
