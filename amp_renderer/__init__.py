@@ -239,6 +239,7 @@ class AMPNode:
         amp-custom style section.
         """
         translation = None
+        did_strip_sizes = False
 
         translations = [k for k in self._other_attrs if k in self.TRANSLATIONS]
         if translations:
@@ -265,6 +266,10 @@ class AMPNode:
                     css_part = Translator.make_translated_css(attribute_value, potential_id)
                 except ValueError:
                     raise self.TransformationError('Invalid value for `{}` attribute'.format(t))
+                else:
+                    if t == 'sizes':
+                        # Need to know so we can apply "responsive" layout
+                        did_strip_sizes = True
 
                 if css_part:
                     css_parts.append(css_part)
@@ -316,6 +321,8 @@ class AMPNode:
                 layout_value = 'container'
             elif height_is_set and not width_is_set:
                 layout_value = 'fixed_height'
+            elif height_is_set and width_is_set and did_strip_sizes:
+                layout_value = 'responsive'
             else:
                 layout_value = 'fixed'
 
