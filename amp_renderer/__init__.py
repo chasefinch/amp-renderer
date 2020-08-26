@@ -272,17 +272,14 @@ class AMPNode:
 
             css_parts = []
             for t in translations:
-                if t == 'sizes' and 'srcset' not in self._other_attrs:
-                    """According to the Mozilla docs, a sizes attribute without
-                    a valid srcset attribute should have no effect. Therefore,
-                    it should simply be stripped, without producing media
-                    queries.
+                if t == 'sizes' and 'disable-inline-width' in self._other_attrs:
+                    """Sizes is meant to be passed to the img tag for source
+                    selection, but the user didn’t intend for it to have any
+                    side effects. Don’t add any.
 
-                    https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-sizes  # noqa
+                    https://amp.dev/documentation/guides-and-tutorials/learn/amp-html-layout/?format=websites  # noqa
                     """
-
-                    # continue
-                    pass
+                    continue
 
                 attribute_value = self._other_attrs[t]
                 Translator = self.TRANSLATIONS[t]  # noqa
