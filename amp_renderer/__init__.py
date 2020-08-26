@@ -594,6 +594,9 @@ class AMPRenderer(HTMLParser, object):
 
             amp_element = AMPNode(tag, attrs)
             if not self._is_test_mode:
+                """AMP Optimizer strips these out, and I believe this is
+                incorrect, because the runtime handles them smartly when
+                left alone."""
                 amp_element.should_strip_translated_attrs = False
 
             try:
