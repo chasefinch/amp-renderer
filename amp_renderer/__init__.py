@@ -255,7 +255,8 @@ class AMPNode:
                     https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-sizes  # noqa
                     """
 
-                    continue
+                    # continue
+                    pass
 
                 attribute_value = self._other_attrs[t]
                 Translator = self.TRANSLATIONS[t]  # noqa
