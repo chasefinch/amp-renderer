@@ -31,6 +31,8 @@ Boilerplate styles can be removed except in these cases:
   - `amp-dynamic-css-classes`
   - `amp-story`
 
+If boilerplate styles can’t be removed, the attribute `no_boilerplate` will be set to `True` after calling `render`; otherwise it will be `False`. Until `render` runs, the `no_boilerplate` attribute isn’t set at all.
+
 ## Usage
 
 If using Django, you can use the [Django AMP Renderer middleware](https://github.com/chasefinch/django-amp-renderer).
