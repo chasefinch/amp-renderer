@@ -6,7 +6,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='amp-renderer',
-    version='1.1.5',
+    version='1.1.6',
     author='Chase Finch',
     author_email='chase@finch.email',
     description='Unofficial Python port of server-side rendering from AMP Optimizer',
