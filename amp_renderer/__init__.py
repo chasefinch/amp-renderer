@@ -43,8 +43,7 @@ class AMPNode:
             for size_value in size_values:
                 size_parts = re.split(r'\)\s+', size_value)
                 if len(size_parts) != 2:
-                    # Silently remove this part of the definition
-                    continue
+                    raise ValueError('Invalid sizes definition')
 
                 query = '{})'.format(size_parts[0])
                 query = query.replace(r'\s+', '')
@@ -259,7 +258,11 @@ class AMPNode:
                 attribute_value = self._other_attrs[t]
                 Translator = self.TRANSLATIONS[t]  # noqa
 
-                css_part = Translator.make_translated_css(attribute_value, potential_id)
+                try:
+                    css_part = Translator.make_translated_css(attribute_value, potential_id)
+                except ValueError:
+                    raise self.TransformationError('Invalid value for `{}` attribute'.format(t))
+
                 if css_part:
                     css_parts.append(css_part)
 
@@ -384,7 +387,6 @@ class AMPNode:
             self.maybe_img_attrs = img_attrs
 
         # Create sizer if necessary
-
         if all(isinstance(length, self.CSSLength) for length in [width, height]):
             if all([width.numeral != 0, width.unit == height.unit]):
                 Sizer = namedtuple('Sizer', 'attrs maybe_img_attrs')
@@ -411,6 +413,10 @@ class AMPNode:
         return translation
 
     def get_attrs(self):
+        """Return an list of attribute tuples that represents current state.
+
+        This returns different values before and after a call to `transform()`.
+        """
         attrs = list(self._other_attrs.items())
 
         if self.id:
@@ -431,13 +437,14 @@ class AMPNode:
 class AMPRenderer(HTMLParser, object):
     """A parser to ingest AMP HTML and perform various transformations."""
 
+    # These are added in where found, and removed during cleanup.
     TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
     BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
     NOSCRIPT_BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
 
     RENDER_DELAYING_EXTENSIONS = [
         'amp-dynamic-css-classes',
-        # 'amp-experiment',
+        # 'amp-experiment',  # we handle this by looking for the tag instead
         'amp-story',
     ]
 
@@ -514,6 +521,7 @@ class AMPRenderer(HTMLParser, object):
         tag = tag.lower()
 
         if self._is_expecting_experiment_data:
+            # Expecting some JSON, found a start tag == NO EXPERIMENT
             self._apply_experiment_data()
 
         if self._is_expecting_experiment_script:
@@ -522,13 +530,13 @@ class AMPRenderer(HTMLParser, object):
             if tag == 'script':
                 for attr in attrs:
                     if attr[0] == 'type' and attr[1] == 'application/json':
+                        """Expecting script & found it; Next, we expect some
+                        JSON data"""
                         self._is_expecting_experiment_data = True
 
         if self._is_expecting_experiment_end:
+            # Expecting </amp-experiment>, found a start tag == NO EXPERIMENT
             self._is_expecting_experiment_end = False
-
-        if self._is_expecting_experiment_script and tag == 'script':
-            self._is_expecting_experiment_script = False
 
         if tag == 'noscript':
             self._is_in_noscript = True
@@ -537,6 +545,7 @@ class AMPRenderer(HTMLParser, object):
             if 'amp-boilerplate' in (attr[0] for attr in attrs):
                 self._is_in_boilerplate = True
 
+                # Add appropriate boilerplate placeholder
                 if self._is_in_noscript and self.NOSCRIPT_BOILERPLATE_PLACEHOLDER not in self._result:
                     self._result = '{}{}'.format(self._result, self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
                 elif self.BOILERPLATE_PLACEHOLDER not in self._result:
@@ -548,6 +557,7 @@ class AMPRenderer(HTMLParser, object):
 
         if tag == 'html':
             if 'i-amphtml-layout' in (attr[0] for attr in attrs):
+                # A simple check to see if it’s transformed already
                 self._is_render_cancelled = True
             else:
                 html_attrs = [('i-amphtml-layout', None), ('i-amphtml-no-boilerplate', None)]
@@ -557,20 +567,26 @@ class AMPRenderer(HTMLParser, object):
                 safe_attrs.extend(html_attrs)
 
         if tag in ['template', 'script']:
+            # Don't render amp-* elements inside of `template` or `script`
             self._is_render_paused = True
 
-        if tag == 'script':
-            for attr in attrs:
-                if attr[0] == 'custom-element' and attr[1] in self.RENDER_DELAYING_EXTENSIONS:
-                    self._should_remove_boilerplate = False
+            if tag == 'script':
+                for attr in attrs:
+                    if attr[0] == 'custom-element' and attr[1] in self.RENDER_DELAYING_EXTENSIONS:
+                        """Don’t remove boilerplate if one of the render-
+                        delaying extensions is included"""
+                        self._should_remove_boilerplate = False
 
         sizer = None
         maybe_img_attrs = None
         if tag == 'amp-audio':
+            # Don’t remove boilerplate if `amp-audio` is included
             self._should_remove_boilerplate = False
 
         elif not self._is_render_cancelled and not self._is_render_paused and tag.startswith('amp-'):
             if tag == 'amp-experiment':
+                """Start the finite automata to see if we need to keep the
+                boilerplate"""
                 self._is_expecting_experiment_script = True
 
             amp_element = AMPNode(tag, attrs)
@@ -585,12 +601,14 @@ class AMPRenderer(HTMLParser, object):
                     self._translated_styles = '{}{}'.format(self._translated_styles, css)
 
                     if used_auto_id:
+                        # We had to generate an ID for this element
                         self._next_auto_id_num += 1
 
             safe_attrs = amp_element.get_attrs()
             sizer = amp_element.sizer
             maybe_img_attrs = amp_element.maybe_img_attrs
 
+        # Turn attribute data in to strings
         attr_strings = []
         for attr in safe_attrs:
             if attr[1] is not None:
@@ -610,6 +628,7 @@ class AMPRenderer(HTMLParser, object):
 
         self._result = '{}<{}{}>'.format(self._result, tag, attr_string)
 
+        # Add sizer if necessary
         if sizer:
             sizer_attr_strings = []
             for attr in sizer.attrs:
@@ -638,6 +657,7 @@ class AMPRenderer(HTMLParser, object):
 
             self._result = '{}</i-amphtml-sizer>'.format(self._result)
 
+        # Add img if necessary
         if maybe_img_attrs:
             img_attr_strings = []
             for attr in maybe_img_attrs:
@@ -651,8 +671,12 @@ class AMPRenderer(HTMLParser, object):
 
             self._result = '{}<img{}>'.format(self._result, img_attr_string)
 
+        # Add runtime styles if necessary
         if tag == 'head' and not self._is_render_cancelled:
             if self._is_test_mode:
+                """AMP Optimizer uses a stub like this, and then replaces it
+                later. Use a stub so we can test against their expected
+                output."""
                 style = '<style amp-runtime></style>'
             else:
                 style = '<style amp-runtime i-amphtml-version="{}">{}</style>'.format(
@@ -661,6 +685,8 @@ class AMPRenderer(HTMLParser, object):
             self._result = '{}{}'.format(self._result, style)
 
         if tag == 'style':
+            """Insert a placeholder into <style amp-custom> so we can add in
+            the transformed styles later."""
             if 'amp-custom' in (attr[0] for attr in attrs) and self.TRANSLATED_STYLES_PLACEHOLDER not in self._result:
                 self._found_custom_element = True
                 self._result = '{}{}'.format(self._result, self.TRANSLATED_STYLES_PLACEHOLDER)
@@ -669,15 +695,17 @@ class AMPRenderer(HTMLParser, object):
         tag = tag.lower()
 
         if self._is_expecting_experiment_data:
+            # Finish ingesting JSON data
             data = self._apply_experiment_data()
 
-            # If valid json...
             if tag == 'script':
                 try:
+                    # If valid JSON...
                     json_data = json.loads(data)
                 except ValueError:
                     pass
                 else:
+                    # If data wasn’t empty...
                     if json_data:
                         self._is_expecting_experiment_end = True
 
@@ -701,6 +729,12 @@ class AMPRenderer(HTMLParser, object):
             return
 
         if tag == 'head' and not self._found_custom_element and self.TRANSLATED_STYLES_PLACEHOLDER not in self._result:
+            """If there was no custom element found in the head, add the
+            placeholder at the end in case we have custom styles to add later.
+
+            self._found_custom_element will remain False, and we’ll inspect
+            that later to decide whether the <script> element itself needs to
+            be added."""
             self._result = '{}{}'.format(self._result, self.TRANSLATED_STYLES_PLACEHOLDER)
 
         if tag in ['template', 'script']:
@@ -743,6 +777,7 @@ class AMPRenderer(HTMLParser, object):
 
         style_string = self._translated_styles
         if style_string and not self._found_custom_element:
+            # Insert the amp-custom tag if necessary
             style_string = '<style amp-custom>{}</style>'.format(style_string)
         self._result = self._result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, style_string)
 
@@ -752,6 +787,8 @@ class AMPRenderer(HTMLParser, object):
         self.no_boilerplate = True
         if self._is_render_cancelled or not self._should_remove_boilerplate:
             self.no_boilerplate = False
+
+            # Restore the boilerplate
             boilerplate = '<style amp-boilerplate>{}</style>'.format(self._boilerplate)
             noscript_boilerplate = '<style amp-boilerplate>{}</style>'.format(self._noscript_boilerplate)
             self._result = self._result.replace(' i-amphtml-no-boilerplate', '')
@@ -759,6 +796,7 @@ class AMPRenderer(HTMLParser, object):
         self._result = self._result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
         self._result = self._result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
 
+        # Remove empty noscript tags; This happens when removing boilerplate
         self._result = self._result.replace('<noscript></noscript>', '')
 
         return self._result
