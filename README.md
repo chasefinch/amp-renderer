@@ -26,6 +26,7 @@ Boilerplate styles can be removed except in these cases:
 - An AMP element uses an unsupported value for the `layout` attribute
 - `amp-audio` is used
 - There is at least one `amp-experiment` active
+- Transformation fails for one or more elements due to an invalid attribute value for `media`, `sizes`, or `heights`
 - Any render-delaying extension is used. Currently this means:
   - `amp-dynamic-css-classes`
   - `amp-story`
