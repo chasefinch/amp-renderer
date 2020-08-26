@@ -187,6 +187,8 @@ class AMPNode:
         self.sizer = None
         self.maybe_img_attrs = None
 
+        self.should_strip_translated_attrs = True
+
         for attr in attrs:
             if attr[0] == 'id':
                 self.id = attr[1]
@@ -275,8 +277,9 @@ class AMPNode:
 
                 translation = css, used_auto_id
 
-            for t in translations:
-                del self._other_attrs[t]
+            if self.should_strip_translated_attrs:
+                for t in translations:
+                    del self._other_attrs[t]
 
         layout_value = self._other_attrs.get('layout')
 
@@ -590,6 +593,8 @@ class AMPRenderer(HTMLParser, object):
                 self._is_expecting_experiment_script = True
 
             amp_element = AMPNode(tag, attrs)
+            if not self._is_test_mode:
+                amp_element.should_strip_translated_attrs = False
 
             try:
                 transformation = amp_element.transform(self._next_auto_id_num)
