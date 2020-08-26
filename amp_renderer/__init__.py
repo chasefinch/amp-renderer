@@ -238,6 +238,31 @@ class AMPNode:
         Returns styles that need to be appended to the beginning of the
         amp-custom style section.
         """
+        # Create img if necessary
+        if self.tag == 'amp-img' and 'data-hero' in self._other_attrs:
+            self._other_attrs['i-amphtml-ssr'] = None
+            img_attrs = [
+                ('class', 'i-amphtml-fill-content i-amphtml-replaced-content'),
+                ('decoding', 'async'),
+            ]
+
+            attrs_to_copy = [
+                'alt',
+                'attribution',
+                'object-fit',
+                'object-position',
+                'referrerpolicy',
+                'src',
+                'srcset',
+                'sizes',
+                'title',
+            ]
+            for name in [k for k in attrs_to_copy if k in self._other_attrs]:
+                img_attrs.append((name, self._other_attrs[name]))
+
+            self.maybe_img_attrs = img_attrs
+
+        # Translate special attributes to amp-custom CSS
         translation = None
         did_strip_sizes = False
 
@@ -287,6 +312,7 @@ class AMPNode:
                 for t in translations:
                     del self._other_attrs[t]
 
+        # Apply the transformation
         layout_value = self._other_attrs.get('layout')
 
         width = self._parse_length(self._other_attrs.get('width'))
@@ -372,30 +398,6 @@ class AMPNode:
                     existing_style=self._style)
 
         self._other_attrs['i-amphtml-layout'] = layout.value
-
-        # Create img if necessary
-        if self.tag == 'amp-img' and 'data-hero' in self._other_attrs:
-            self._other_attrs['i-amphtml-ssr'] = None
-            img_attrs = [
-                ('class', 'i-amphtml-fill-content i-amphtml-replaced-content'),
-                ('decoding', 'async'),
-            ]
-
-            attrs_to_copy = [
-                'alt',
-                'attribution',
-                'object-fit',
-                'object-position',
-                'referrerpolicy',
-                'src',
-                'srcset',
-                'sizes',
-                'title',
-            ]
-            for name in [k for k in attrs_to_copy if k in self._other_attrs]:
-                img_attrs.append((name, self._other_attrs[name]))
-
-            self.maybe_img_attrs = img_attrs
 
         # Create sizer if necessary
         if all(isinstance(length, self.CSSLength) for length in [width, height]):
