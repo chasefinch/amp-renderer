@@ -116,9 +116,9 @@ The Python AMP Renderer does not insert `preload` links into the `head` of the D
 
 Since AMPRenderer adds the `amp-runtime` styles to the document, you can also use the [AMP Module Build](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites#amp-module-build-(coming-soon)) by hand. To take advantage of this, rewrite the import scripts such that imports like this:
 
-	<script async src="https://www.ampproject.org/v0.js"></script>
+	<script async src="https://cdn.ampproject.org/v0.js"></script>
 
 ...become 2-part imports based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
 
-	<script type="module" async src="https://www.ampproject.org/v0.mjs"></script>
-	<script nomodule async src="https://www.ampproject.org/v0.js"></script> 
+	<script type="module" async src="https://cdn.ampproject.org/v0.mjs"></script>
+	<script nomodule async src="https://cdn.ampproject.org/v0.js"></script> 
