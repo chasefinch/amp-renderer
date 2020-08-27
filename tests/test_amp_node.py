@@ -123,7 +123,7 @@ class TestNode:
 
         assert set(node.get_attrs()) == set(attrs)
 
-        transformations = node.transform(1)
+        transformations = node.transform('i-amp-1')
         assert node.id == 'i-amp-1'
         assert transformations[1]
 

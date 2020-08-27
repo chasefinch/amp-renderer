@@ -20,8 +20,6 @@ else:
 
 
 class AMPNode:
-    ID_PREFIX = 'i-amp-'
-
     class TransformationError(Exception):
         pass
 
@@ -232,7 +230,7 @@ class AMPNode:
 
         return self.CSSLength(numeral=numeral, unit=unit)
 
-    def transform(self, next_auto_id_num):
+    def transform(self, next_auto_id):
         """Apply the transformation.
 
         Returns styles that need to be appended to the beginning of the
@@ -268,7 +266,7 @@ class AMPNode:
 
         translations = [k for k in self._other_attrs if k in self.TRANSLATIONS]
         if translations:
-            potential_id = self.id or '{}{}'.format(self.ID_PREFIX, next_auto_id_num)
+            potential_id = self.id or next_auto_id
 
             css_data_items = []
             for t in translations:
@@ -455,6 +453,8 @@ class AMPRenderer(HTMLParser, object):
         'amp-story',
     ]
 
+    ID_PREFIX = 'i-amp-'
+
     def __init__(self, runtime_styles, runtime_version, *args, **kwargs):
         """Initialize AMPRenderer with runtime styles & version.
 
@@ -510,6 +510,14 @@ class AMPRenderer(HTMLParser, object):
             del self.no_boilerplate
         except AttributeError:
             pass
+
+    def _get_next_auto_id(self):
+        return '{}{}'.format(self.ID_PREFIX, self._next_auto_id_num)
+
+    def _increment_auto_id_num(self):
+        self._next_auto_id_num += 1
+        while self._next_auto_id_num in self._auto_id_nums_to_ignore:
+            self._next_auto_id_num += 1
 
     def _apply_experiment_data(self):
         self._result = '{}{}'.format(self._result, self._current_experiment_data)
@@ -599,7 +607,7 @@ class AMPRenderer(HTMLParser, object):
             amp_element = AMPNode(tag, attrs)
 
             try:
-                transformation = amp_element.transform(self._next_auto_id_num)
+                transformation = amp_element.transform(self._get_next_auto_id())
             except AMPNode.TransformationError:
                 self._should_remove_boilerplate = False
             else:
@@ -609,7 +617,7 @@ class AMPRenderer(HTMLParser, object):
 
                     if used_auto_id:
                         # We had to generate an ID for this element
-                        self._next_auto_id_num += 1
+                        self._increment_auto_id_num()
 
             safe_attrs = amp_element.get_attrs()
             sizer = amp_element.sizer
@@ -779,6 +787,13 @@ class AMPRenderer(HTMLParser, object):
 
     def render(self, data):
         self.reset()
+
+        self._auto_id_nums_to_ignore = []
+
+        conflict_ids = re.findall(r"""id=['"]?{}([0-9]+)['"]?""".format(self.ID_PREFIX), data)
+        for conflict_id in conflict_ids:
+            self._auto_id_nums_to_ignore.append(int(conflict_id))
+
         self.feed(data)
         self.close()
 
@@ -822,6 +837,7 @@ class AMPRenderer(HTMLParser, object):
         if style_string and not self._found_custom_element:
             # Insert the amp-custom tag if necessary
             style_string = '<style amp-custom>{}</style>'.format(style_string)
+
         self._result = self._result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, style_string)
 
         boilerplate = ''

@@ -99,7 +99,7 @@ class TestSpec:
         'boilerplate_removed_when_amp_experiment_present_but_no_tag',
         'boilerplate_then_noscript_removed',
         'converts_heights_attribute_to_css',
-        # 'converts_media_attribute_to_css',
+        'converts_media_attribute_to_css',
         'converts_sizes_attribute_to_css',
         'does_not_appy_transformations_if_already_present',
         'does_not_break_noscript_tags',
