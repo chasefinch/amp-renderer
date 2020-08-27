@@ -7,7 +7,7 @@ import re
 import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from enum import Enum
 
 if sys.version_info[0] < 3:

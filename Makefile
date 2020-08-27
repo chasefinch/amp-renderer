@@ -1,9 +1,10 @@
-default: normal lint test
+default: lint test
 
 normal:
 	isort .
 
 lint:
+	isort --check-only .
 	flake8 .
 
 test:
