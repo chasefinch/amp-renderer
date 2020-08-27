@@ -61,7 +61,7 @@ class AMPNode:
             media = re.sub(r'\s+', ' ', value).strip()
 
             if not media:
-                return ''
+                return None
 
             if media[0] == '(':
                 media = 'all and {}'.format(media)
@@ -283,14 +283,15 @@ class AMPNode:
                 Translator = self.TRANSLATIONS[t]  # noqa
 
                 try:
-                    results = Translator.translate(attribute_value, potential_id)
+                    translation = Translator.translate(attribute_value, potential_id)
                 except ValueError:
                     raise self.TransformationError('Invalid value for `{}` attribute'.format(t))
                 else:
-                    css_data_items.extend(results)
-                    if t == 'sizes':
-                        # Need to know so we can apply "responsive" layout
-                        did_strip_sizes = True
+                    if translation:
+                        css_data_items.append(translation)
+                        if t == 'sizes':
+                            # Need to know so we can apply "responsive" layout
+                            did_strip_sizes = True
 
             if css_data_items:
                 used_auto_id = False
@@ -612,8 +613,8 @@ class AMPRenderer(HTMLParser, object):
                 self._should_remove_boilerplate = False
             else:
                 if transformation:
-                    css_data, used_auto_id = transformation
-                    self._translated_css_data.append(css_data)
+                    translations, used_auto_id = transformation
+                    self._translated_css_data.extend(translations)
 
                     if used_auto_id:
                         # We had to generate an ID for this element
@@ -799,7 +800,11 @@ class AMPRenderer(HTMLParser, object):
 
         # Combine translated styles by media query and value when possible
         media_batches = {}
-        for selector, statements in self._translated_css_data:
+
+        for css_data in self._translated_css_data:
+            selector = css_data.selector
+            statements = css_data.statements
+
             media_batch_key = tuple(statements.keys())
             batch = media_batches.get(media_batch_key) or OrderedDict()
 
