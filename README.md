@@ -101,9 +101,9 @@ There are still some aspects of the official AMP Optimizer implementation that h
 
 ### Dynamic attributes
 - [x] ~Support `sizes`, `media`, and `heights` via CSS injection~
+- [x] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
 - [ ] Support percent values in `heights`
 - [ ] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
-- [ ] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
 
 ### Hero Images
 - [x] ~Inject `img` tag for `amp-img`s with the `data-hero` attribute~

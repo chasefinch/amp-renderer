@@ -7,7 +7,7 @@ import re
 import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from enum import Enum
 
 if sys.version_info[0] < 3:
@@ -26,6 +26,8 @@ class AMPNode:
         pass
 
     class Translator:
+        Translation = namedtuple('Translation', 'selector statements')
+
         @classmethod
         def parse_sizes(cls, value):
             # Normalize whitespace
@@ -56,7 +58,7 @@ class AMPNode:
 
     class MediaTranslator(Translator):
         @classmethod
-        def make_translated_css(cls, value, element_id):
+        def translate(cls, value, element_id):
             # Normalize whitespace
             media = re.sub(r'\s+', ' ', value).strip()
 
@@ -72,17 +74,21 @@ class AMPNode:
                 media = 'not {}'.format(media)
 
             selector = '#{}'.format(element_id)
-            return '@media {media}{{{selector}{{display:none}}}}'.format(media=media, selector=selector)
+
+            return cls.Translation(
+                selector=selector,
+                statements=OrderedDict([
+                    (media, 'display:none'),
+                ]))
 
     class SizesTranslator(Translator):
         @classmethod
-        def make_translated_css(cls, value, element_id):
+        def translate(cls, value, element_id):
             sizes = cls.parse_sizes(value)
 
             selector = '#{}'.format(element_id)
 
-            default_size_statement = '{selector}{{width:{value}}}'.format(selector=selector, value=sizes.default)
-            statements = [default_size_statement]
+            statements = [(None, 'width:{}'.format(sizes.default))]
 
             other_sizes = sizes.other
 
@@ -92,26 +98,22 @@ class AMPNode:
             reverse the order the media queries in CSS to emulate this
             behavior (the last definition has precedence)."""
             other_sizes.reverse()
-            for size in other_sizes:
-                statement = '@media {media}{{{selector}{{width:{value}}}}}'.format(
-                    media=size.query,
-                    selector=selector,
-                    value=size.value)
-                statements.append(statement)
 
-            return ''.join(statements)
+            for size in other_sizes:
+                statements.append((size.query, 'width:{}'.format(size.value)))
+
+            return cls.Translation(
+                selector=selector,
+                statements=OrderedDict(statements))
 
     class HeightsTranslator(Translator):
         @classmethod
-        def make_translated_css(cls, value, element_id):
+        def translate(cls, value, element_id):
             sizes = cls.parse_sizes(value)
 
             selector = '#{}>:first-child'.format(element_id)
 
-            default_size_statement = '{selector}{{padding-top:{value}}}'.format(
-                selector=selector,
-                value=sizes.default)
-            statements = [default_size_statement]
+            statements = [(None, 'padding-top:{}'.format(sizes.default))]
 
             other_sizes = sizes.other
 
@@ -122,13 +124,11 @@ class AMPNode:
             behavior (the last definition has precedence)."""
             other_sizes.reverse()
             for size in other_sizes:
-                statement = '@media {media}{{{selector}{{padding-top:{value}}}}}'.format(
-                    media=size.query,
-                    selector=selector,
-                    value=size.value)
-                statements.append(statement)
+                statements.append((size.query, 'padding-top:{}'.format(size.value)))
 
-            return ''.join(statements)
+            return cls.Translation(
+                selector=selector,
+                statements=OrderedDict(statements))
 
     TRANSLATIONS = {
         'media': MediaTranslator,
@@ -263,14 +263,14 @@ class AMPNode:
             self.maybe_img_attrs = img_attrs
 
         # Translate special attributes to amp-custom CSS
-        translation = None
+        css_data = None
         did_strip_sizes = False
 
         translations = [k for k in self._other_attrs if k in self.TRANSLATIONS]
         if translations:
             potential_id = self.id or '{}{}'.format(self.ID_PREFIX, next_auto_id_num)
 
-            css_parts = []
+            css_data_items = []
             for t in translations:
                 if t == 'sizes' and 'disable-inline-width' in self._other_attrs:
                     """Sizes is meant to be passed to the img tag for source
@@ -285,25 +285,22 @@ class AMPNode:
                 Translator = self.TRANSLATIONS[t]  # noqa
 
                 try:
-                    css_part = Translator.make_translated_css(attribute_value, potential_id)
+                    results = Translator.translate(attribute_value, potential_id)
                 except ValueError:
                     raise self.TransformationError('Invalid value for `{}` attribute'.format(t))
                 else:
+                    css_data_items.extend(results)
                     if t == 'sizes':
                         # Need to know so we can apply "responsive" layout
                         did_strip_sizes = True
 
-                if css_part:
-                    css_parts.append(css_part)
-
-            css = ''.join(css_parts)
-            if css:
+            if css_data_items:
                 used_auto_id = False
                 if not self.id:
                     used_auto_id = True
                     self.id = potential_id
 
-                translation = css, used_auto_id
+                css_data = css_data_items, used_auto_id
 
             if self.should_strip_translated_attrs:
                 for t in translations:
@@ -420,7 +417,7 @@ class AMPNode:
 
                     self.sizer = Sizer(attrs=[('class', 'i-amphtml-sizer')], maybe_img_attrs=img_attrs)
 
-        return translation
+        return css_data
 
     def get_attrs(self):
         """Return an list of attribute tuples that represents current state.
@@ -507,7 +504,7 @@ class AMPRenderer(HTMLParser, object):
         self._result = ''
         self._found_custom_element = False
         self._next_auto_id_num = 0
-        self._translated_styles = ''
+        self._translated_css_data = []
 
         try:
             del self.no_boilerplate
@@ -607,8 +604,8 @@ class AMPRenderer(HTMLParser, object):
                 self._should_remove_boilerplate = False
             else:
                 if transformation:
-                    css, used_auto_id = transformation
-                    self._translated_styles = '{}{}'.format(self._translated_styles, css)
+                    css_data, used_auto_id = transformation
+                    self._translated_css_data.append(css_data)
 
                     if used_auto_id:
                         # We had to generate an ID for this element
@@ -785,7 +782,43 @@ class AMPRenderer(HTMLParser, object):
         self.feed(data)
         self.close()
 
-        style_string = self._translated_styles
+        # Combine translated styles by media query and value when possible
+        media_batches = {}
+        for selector, statements in self._translated_css_data:
+            media_batch_key = tuple(statements.keys())
+            batch = media_batches.get(media_batch_key) or OrderedDict()
+
+            for query in statements:
+                value_dict = batch.get(query) or OrderedDict()
+
+                value_key = statements[query]
+                selector_list = value_dict.get(value_key) or []
+                selector_list.append(selector)
+                value_dict[value_key] = selector_list
+
+                batch[query] = value_dict
+
+            media_batches[media_batch_key] = batch
+
+        css_parts = []
+        for key in media_batches:
+            batch = media_batches[key]
+
+            for query in batch:
+                parts = []
+
+                for value in batch[query]:
+                    selector = ','.join(batch[query][value])
+                    parts.append('{s}{{{v}}}'.format(s=selector, v=value))
+
+                css = ''.join(parts)
+                if query:
+                    css = '@media {q}{{{css}}}'.format(q=query, css=css)
+
+                css_parts.append(css)
+
+        style_string = ''.join(css_parts)
+
         if style_string and not self._found_custom_element:
             # Insert the amp-custom tag if necessary
             style_string = '<style amp-custom>{}</style>'.format(style_string)

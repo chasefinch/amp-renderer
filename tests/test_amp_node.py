@@ -125,14 +125,6 @@ class TestNode:
 
         transformations = node.transform(1)
         assert node.id == 'i-amp-1'
-
-        assert transformations[0] in [
-            ('@media not all and (max-width:1024px){#i-amp-1{display:none}}'
-             '#i-amp-1{width:100vw}@media (max-width:533px){#i-amp-1{width:133px}}'),
-            ('#i-amp-1{width:100vw}@media (max-width:533px){#i-amp-1{width:133px}}'
-             '@media not all and (max-width:1024px){#i-amp-1{display:none}}'),
-        ]
-
         assert transformations[1]
 
         transformed_attrs = node.get_attrs()
