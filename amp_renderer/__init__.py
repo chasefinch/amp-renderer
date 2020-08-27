@@ -799,7 +799,7 @@ class AMPRenderer(HTMLParser, object):
         self.close()
 
         # Combine translated styles by media query and value when possible
-        media_batches = {}
+        media_batches = OrderedDict()
 
         for css_data in self._translated_css_data:
             selector = css_data.selector
