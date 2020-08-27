@@ -342,6 +342,11 @@ class AMPNode:
                 layout_value = 'fixed_height'
             elif height_is_set and width_is_set and did_strip_sizes:
                 layout_value = 'responsive'
+
+                """Apply this directly, because otherwise the runtime won't see
+                the `sizes` attribute, and will think the element should be
+                "fixed"."""
+                self._other_attrs['layout'] = layout_value
             else:
                 layout_value = 'fixed'
 
