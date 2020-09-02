@@ -48,7 +48,7 @@ class Translator:
             if len(size_parts) != 2:
                 raise ValueError('Invalid sizes definition')
 
-            query = '{})'.format(size_parts[0])
+            query = '%s)' % size_parts[0]
             query = query.replace(r'\s+', '')
             value = size_parts[1]
 
@@ -68,14 +68,14 @@ class MediaTranslator(Translator):
             return None
 
         if media[0] == '(':
-            media = 'all and {}'.format(media)
+            media = 'all and %s' % media
 
         if media.startswith('not '):
             media = media[4:]
         else:
-            media = 'not {}'.format(media)
+            media = 'not %s' % media
 
-        selector = '#{}'.format(element_id)
+        selector = '#%s' % element_id
 
         return Translation(
             selector=selector,
@@ -89,9 +89,9 @@ class SizesTranslator(Translator):
     def translate(cls, value, element_id):
         sizes = cls.parse_sizes(value)
 
-        selector = '#{}'.format(element_id)
+        selector = '#%s' % element_id
 
-        statements = [(None, 'width:{}'.format(sizes[0]))]
+        statements = [(None, 'width:%s' % sizes[0])]
 
         other_sizes = sizes[1]
 
@@ -103,7 +103,7 @@ class SizesTranslator(Translator):
         other_sizes.reverse()
 
         for size in other_sizes:
-            statements.append((size[0], 'width:{}'.format(size[1])))
+            statements.append((size[0], 'width:%s' % size[1]))
 
         return Translation(
             selector=selector,
@@ -115,9 +115,9 @@ class HeightsTranslator(Translator):
     def translate(cls, value, element_id):
         sizes = cls.parse_sizes(value)
 
-        selector = '#{}>:first-child'.format(element_id)
+        selector = '#%s>:first-child' % element_id
 
-        statements = [(None, 'padding-top:{}'.format(sizes[0]))]
+        statements = [(None, 'padding-top:%s' % sizes[0])]
 
         other_sizes = sizes[1]
 
@@ -128,7 +128,7 @@ class HeightsTranslator(Translator):
         behavior (the last definition has precedence)."""
         other_sizes.reverse()
         for size in other_sizes:
-            statements.append((size[0], 'padding-top:{}'.format(size[1])))
+            statements.append((size[0], 'padding-top:%s' % size[1]))
 
         return Translation(
             selector=selector,
@@ -314,7 +314,7 @@ class AMPNode:
                 try:
                     translation = Translator.translate(attribute_value, potential_id)
                 except ValueError:
-                    raise TransformationError('Invalid value for `{}` attribute'.format(t))
+                    raise TransformationError('Invalid value for `%s` attribute' % t)
                 else:
                     if translation:
                         css_data_items.append(translation)
@@ -395,34 +395,34 @@ class AMPNode:
             if not all(isinstance(length, CSSLength) for length in [width, height]):
                 raise TransformationError('Length and width required for fixed layout')
 
-            self._style = 'width:{wn}{wu};height:{hn}{hu};{existing_style}'.format(
-                wn=str(width[0]).rstrip('0').rstrip('.'),
-                wu=width[1].value,
-                hn=str(height[0]).rstrip('0').rstrip('.'),
-                hu=height[1].value,
-                existing_style=self._style)
+            self._style = 'width:{}{};height:{}{};{}'.format(
+                str(width[0]).rstrip('0').rstrip('.'),
+                width[1].value,
+                str(height[0]).rstrip('0').rstrip('.'),
+                height[1].value,
+                self._style)
 
         elif layout == LAYOUT_FIXED_HEIGHT:
             if not isinstance(height, CSSLength):
                 raise TransformationError('Length and width required for fixed layout')
 
-            self._style = 'height:{numeral}{unit};{existing_style}'.format(
-                numeral=str(height[0]).rstrip('0').rstrip('.'),
-                unit=height[1].value,
-                existing_style=self._style)
+            self._style = 'height:{}{};{}'.format(
+                str(height[0]).rstrip('0').rstrip('.'),
+                height[1].value,
+                self._style)
 
         elif layout == LAYOUT_FLEX_ITEM:
             if isinstance(height, CSSLength):
-                self._style = 'height:{numeral}{unit};{existing_style}'.format(
-                    numeral=str(height[0]).rstrip('0').rstrip('.'),
-                    unit=height[1].value,
-                    existing_style=self._style)
+                self._style = 'height:{}{};{}'.format(
+                    str(height[0]).rstrip('0').rstrip('.'),
+                    height[1].value,
+                    self._style)
 
             if isinstance(width, CSSLength):
-                self._style = 'width:{numeral}{unit};{existing_style}'.format(
-                    numeral=str(width[0]).rstrip('0').rstrip('.'),
-                    unit=width[1].value,
-                    existing_style=self._style)
+                self._style = 'width:{}{};{}'.format(
+                    str(width[0]).rstrip('0').rstrip('.'),
+                    width[1].value,
+                    self._style)
 
         self._other_attrs['i-amphtml-layout'] = layout.value
 
@@ -435,7 +435,7 @@ class AMPNode:
                     self.sizer = Sizer(attrs=[('style', style)], maybe_img_attrs=None)
 
                 elif layout == LAYOUT_INTRINSIC:
-                    svg_string = '<svg height="{h}" width="{w}" xmlns="http://www.w3.org/2000/svg" version="1.1"/>'
+                    svg_string = '<svg height="{}" width="{}" xmlns="http://www.w3.org/2000/svg" version="1.1"/>'
                     svg_string = svg_string.format(height[0], width[0])
 
                     img_attrs = [
@@ -443,7 +443,7 @@ class AMPNode:
                         ('aria-hidden', 'true'),
                         ('class', 'i-amphtml-intrinsic-sizer'),
                         ('role', 'presentation'),
-                        ('src', 'data:image/svg+xml;charset=utf-8,{}'.format(svg_string)),
+                        ('src', 'data:image/svg+xml;charset=utf-8,%s' % svg_string),
                     ]
 
                     self.sizer = Sizer(attrs=[('class', 'i-amphtml-sizer')], maybe_img_attrs=img_attrs)
@@ -522,9 +522,11 @@ class AMPRenderer(HTMLParser, object):
 
         self._boilerplate = ''
         self._is_in_boilerplate = False
+        self._added_boilerplate_placeholder = False
 
         self._noscript_boilerplate = ''
         self._is_in_noscript = False
+        self._added_noscript_boilerplate_placeholder = False
 
         self._is_expecting_experiment_script = False
         self._is_expecting_experiment_data = False
@@ -534,10 +536,12 @@ class AMPRenderer(HTMLParser, object):
         self._is_render_paused = False
         self._is_render_cancelled = False
 
-        self._result = ''
+        self._result = []
         self._found_custom_element = False
         self._next_auto_id_num = 0
         self._translated_css_data = []
+
+        self._added_translated_styles_placeholder = False
 
         try:
             del self.no_boilerplate
@@ -545,7 +549,7 @@ class AMPRenderer(HTMLParser, object):
             pass
 
     def _get_next_auto_id(self):
-        return '{}{}'.format(self.ID_PREFIX, self._next_auto_id_num)
+        return self.ID_PREFIX + str(self._next_auto_id_num)
 
     def _increment_auto_id_num(self):
         self._next_auto_id_num += 1
@@ -553,7 +557,7 @@ class AMPRenderer(HTMLParser, object):
             self._next_auto_id_num += 1
 
     def _apply_experiment_data(self):
-        self._result = '{}{}'.format(self._result, self._current_experiment_data)
+        self._result.append(self._current_experiment_data)
 
         experiment_data = self._current_experiment_data
 
@@ -563,7 +567,7 @@ class AMPRenderer(HTMLParser, object):
         return experiment_data
 
     def handle_decl(self, decl):
-        self._result = '{}<!{}>'.format(self._result, decl.lower())
+        self._result.append('<!%s>' % decl.lower())
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -594,10 +598,12 @@ class AMPRenderer(HTMLParser, object):
                 self._is_in_boilerplate = True
 
                 # Add appropriate boilerplate placeholder
-                if self._is_in_noscript and self.NOSCRIPT_BOILERPLATE_PLACEHOLDER not in self._result:
-                    self._result = '{}{}'.format(self._result, self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
-                elif self.BOILERPLATE_PLACEHOLDER not in self._result:
-                    self._result = '{}{}'.format(self._result, self.BOILERPLATE_PLACEHOLDER)
+                if self._is_in_noscript and not self._added_noscript_boilerplate_placeholder:
+                    self._result.append(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
+                    self._added_noscript_boilerplate_placeholder = True
+                elif not self._added_boilerplate_placeholder:
+                    self._result.append(self.BOILERPLATE_PLACEHOLDER)
+                    self._added_boilerplate_placeholder = True
 
                 return
 
@@ -664,9 +670,9 @@ class AMPRenderer(HTMLParser, object):
                 if self.should_trim_attrs:
                     value = value.strip()
                 value = value.replace('"', '&quot;')
-                attr_strings.append(' {}="{}"'.format(attr[0].lower(), value))
+                attr_strings.append(' %s="%s"' % (attr[0].lower(), value))
             else:
-                attr_strings.append(' {}'.format(attr[0].lower()))
+                attr_strings.append(' %s' % attr[0].lower())
 
         if self._is_test_mode:
             # Sort alphabetically for diffing
@@ -674,7 +680,7 @@ class AMPRenderer(HTMLParser, object):
 
         attr_string = ''.join(attr_strings)
 
-        self._result = '{}<{}{}>'.format(self._result, tag, attr_string)
+        self._result.append('<%s%s>' % (tag, attr_string))
 
         # Add sizer if necessary
         if sizer:
@@ -683,12 +689,12 @@ class AMPRenderer(HTMLParser, object):
                 if attr[1] is not None:
                     value = str(attr[1])
                     value = value.replace('"', '&quot;')
-                    sizer_attr_strings.append(' {}="{}"'.format(attr[0].lower(), value))
+                    sizer_attr_strings.append(' %s="%s"' % (attr[0].lower(), value))
                 else:
-                    sizer_attr_strings.append(' {}'.format(attr[0].lower()))
+                    sizer_attr_strings.append(' %s' % attr[0].lower())
             sizer_attr_string = ''.join(sizer_attr_strings)
 
-            self._result = '{}<i-amphtml-sizer{}>'.format(self._result, sizer_attr_string)
+            self._result.append('<i-amphtml-sizer%s>' % sizer_attr_string)
 
             if sizer[1] is not None:
                 img_attr_strings = []
@@ -696,14 +702,14 @@ class AMPRenderer(HTMLParser, object):
                     if attr[1] is not None:
                         value = str(attr[1])
                         value = value.replace('"', '&quot;')
-                        img_attr_strings.append(' {}="{}"'.format(attr[0].lower(), value))
+                        img_attr_strings.append(' %s="%s"' % (attr[0].lower(), value))
                     else:
-                        img_attr_strings.append(' {}'.format(attr[0].lower()))
+                        img_attr_strings.append(' %s' % attr[0].lower())
                 img_attr_string = ''.join(img_attr_strings)
 
-                self._result = '{}<img{}>'.format(self._result, img_attr_string)
+                self._result.append('<img%s>' % img_attr_string)
 
-            self._result = '{}</i-amphtml-sizer>'.format(self._result)
+            self._result.append('</i-amphtml-sizer>')
 
         # Add img if necessary
         if maybe_img_attrs:
@@ -712,12 +718,12 @@ class AMPRenderer(HTMLParser, object):
                 if attr[1] is not None:
                     value = str(attr[1])
                     value = value.replace('"', '&quot;')
-                    img_attr_strings.append(' {}="{}"'.format(attr[0].lower(), value))
+                    img_attr_strings.append(' %s="%s"' % (attr[0].lower(), value))
                 else:
-                    img_attr_strings.append(' {}'.format(attr[0].lower()))
+                    img_attr_strings.append(' %s' % attr[0].lower())
             img_attr_string = ''.join(img_attr_strings)
 
-            self._result = '{}<img{}>'.format(self._result, img_attr_string)
+            self._result.append('<img%s>' % img_attr_string)
 
         # Add runtime styles if necessary
         if tag == 'head' and not self._is_render_cancelled:
@@ -727,17 +733,18 @@ class AMPRenderer(HTMLParser, object):
                 output."""
                 style = '<style amp-runtime></style>'
             else:
-                style = '<style amp-runtime i-amphtml-version="{}">{}</style>'.format(
+                style = '<style amp-runtime i-amphtml-version="%s">%s</style>' % (
                     self.runtime_version,
                     self.runtime_styles)
-            self._result = '{}{}'.format(self._result, style)
+            self._result.append(style)
 
         if tag == 'style':
             """Insert a placeholder into <style amp-custom> so we can add in
             the transformed styles later."""
-            if 'amp-custom' in (attr[0] for attr in attrs) and self.TRANSLATED_STYLES_PLACEHOLDER not in self._result:
+            if 'amp-custom' in (attr[0] for attr in attrs) and not self._added_translated_styles_placeholder:
                 self._found_custom_element = True
-                self._result = '{}{}'.format(self._result, self.TRANSLATED_STYLES_PLACEHOLDER)
+                self._result.append(self.TRANSLATED_STYLES_PLACEHOLDER)
+                self._added_translated_styles_placeholder = True
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -776,47 +783,48 @@ class AMPRenderer(HTMLParser, object):
             self._is_in_boilerplate = False
             return
 
-        if tag == 'head' and not self._found_custom_element and self.TRANSLATED_STYLES_PLACEHOLDER not in self._result:
+        if tag == 'head' and not self._found_custom_element and not self._added_translated_styles_placeholder:
             """If there was no custom element found in the head, add the
             placeholder at the end in case we have custom styles to add later.
 
             self._found_custom_element will remain False, and we’ll inspect
             that later to decide whether the <script> element itself needs to
             be added."""
-            self._result = '{}{}'.format(self._result, self.TRANSLATED_STYLES_PLACEHOLDER)
+            self._result.append(self.TRANSLATED_STYLES_PLACEHOLDER)
+            self._added_translated_styles_placeholder = True
 
         if tag in ['template', 'script']:
             self._is_render_paused = False
 
-        self._result = '{}</{}>'.format(self._result, tag)
+        self._result.append('</%s>' % tag)
 
     def _add_data(self, data):
         if self._is_in_boilerplate:
             if self._is_in_noscript:
-                self._noscript_boilerplate = '{}{}'.format(self._noscript_boilerplate, data)
+                self._noscript_boilerplate += data
                 return
 
-            self._boilerplate = '{}{}'.format(self._boilerplate, data)
+            self._boilerplate += data
             return
 
         if self._is_expecting_experiment_data:
-            self._current_experiment_data = '{}{}'.format(self._current_experiment_data, data)
+            self._current_experiment_data += data
             return
 
-        self._result = '{}{}'.format(self._result, data)
+        self._result.append(data)
 
     def handle_data(self, data):
         self._add_data(data)
 
     def handle_entityref(self, name):
-        self._add_data('&{};'.format(name))
+        self._add_data('&%s;' % name)
 
     def handle_charref(self, name):
-        self._add_data('&#{};'.format(name))
+        self._add_data('&#%s;' % name)
 
     def handle_comment(self, data):
         if not self.should_strip_comments:
-            self._result = '{}<!--{}-->'.format(self._result, data)
+            self._result.append('<!--%s-->' % data)
 
     def render(self, data):
         self.reset()
@@ -829,6 +837,8 @@ class AMPRenderer(HTMLParser, object):
 
         self.feed(data)
         self.close()
+
+        result = ''.join(self._result)
 
         # Combine translated styles by media query and value when possible
         media_batches = OrderedDict()
@@ -858,11 +868,11 @@ class AMPRenderer(HTMLParser, object):
 
                 for value in batch[query]:
                     selector = ','.join(batch[query][value])
-                    parts.append('{s}{{{v}}}'.format(s=selector, v=value))
+                    parts.append('%s{%s}' % (selector, value))
 
                 css = ''.join(parts)
                 if query:
-                    css = '@media {q}{{{css}}}'.format(q=query, css=css)
+                    css = '@media %s{%s}' % (query, css)
 
                 css_parts.append(css)
 
@@ -870,9 +880,9 @@ class AMPRenderer(HTMLParser, object):
 
         if style_string and not self._found_custom_element:
             # Insert the amp-custom tag if necessary
-            style_string = '<style amp-custom>{}</style>'.format(style_string)
+            style_string = '<style amp-custom>%s</style>' % style_string
 
-        self._result = self._result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, style_string)
+        result = result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, style_string)
 
         boilerplate = ''
         noscript_boilerplate = ''
@@ -882,14 +892,14 @@ class AMPRenderer(HTMLParser, object):
             self.no_boilerplate = False
 
             # Restore the boilerplate
-            boilerplate = '<style amp-boilerplate>{}</style>'.format(self._boilerplate)
-            noscript_boilerplate = '<style amp-boilerplate>{}</style>'.format(self._noscript_boilerplate)
-            self._result = self._result.replace(' i-amphtml-no-boilerplate', '')
+            boilerplate = '<style amp-boilerplate>%s</style>' % self._boilerplate
+            noscript_boilerplate = '<style amp-boilerplate>%s</style>' % self._noscript_boilerplate
+            result = result.replace(' i-amphtml-no-boilerplate', '')
 
-        self._result = self._result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
-        self._result = self._result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
+        result = result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
+        result = result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
 
         # Remove empty noscript tags; This happens when removing boilerplate
-        self._result = self._result.replace('<noscript></noscript>', '')
+        result = result.replace('<noscript></noscript>', '')
 
-        return self._result
+        return result

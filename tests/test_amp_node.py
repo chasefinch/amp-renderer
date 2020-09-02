@@ -6,7 +6,7 @@ from builtins import bytes  # noqa
 from builtins import str  # noqa
 
 # AMP Renderer
-from amp_renderer import Layout, AMPNode
+from amp_renderer import AMPNode, Layout
 
 
 class TestLayout:
