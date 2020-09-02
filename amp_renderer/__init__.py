@@ -475,11 +475,6 @@ class AMPNode:
 class AMPRenderer(HTMLParser, object):
     """A parser to ingest AMP HTML and perform various transformations."""
 
-    # These are added in where found, and removed during cleanup.
-    TRANSLATED_STYLES_PLACEHOLDER = '/* style-amp-custom-translated */'
-    BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate */'
-    NOSCRIPT_BOILERPLATE_PLACEHOLDER = '/* style-amp-boilerplate-noscript */'
-
     RENDER_DELAYING_EXTENSIONS = [
         'amp-dynamic-css-classes',
         # 'amp-experiment',  # we handle this by looking for the tag instead
@@ -522,11 +517,11 @@ class AMPRenderer(HTMLParser, object):
 
         self._boilerplate = ''
         self._is_in_boilerplate = False
-        self._added_boilerplate_placeholder = False
+        self._boilerplate_index = None
 
         self._noscript_boilerplate = ''
         self._is_in_noscript = False
-        self._added_noscript_boilerplate_placeholder = False
+        self._noscript_boilerplate_index = None
 
         self._is_expecting_experiment_script = False
         self._is_expecting_experiment_data = False
@@ -541,7 +536,7 @@ class AMPRenderer(HTMLParser, object):
         self._next_auto_id_num = 0
         self._translated_css_data = []
 
-        self._added_translated_styles_placeholder = False
+        self._translated_styles_index = None
 
         try:
             del self.no_boilerplate
@@ -598,12 +593,10 @@ class AMPRenderer(HTMLParser, object):
                 self._is_in_boilerplate = True
 
                 # Add appropriate boilerplate placeholder
-                if self._is_in_noscript and not self._added_noscript_boilerplate_placeholder:
-                    self._result.append(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER)
-                    self._added_noscript_boilerplate_placeholder = True
-                elif not self._added_boilerplate_placeholder:
-                    self._result.append(self.BOILERPLATE_PLACEHOLDER)
-                    self._added_boilerplate_placeholder = True
+                if self._is_in_noscript and self._noscript_boilerplate_index is None:
+                    self._noscript_boilerplate_index = len(self._result)
+                elif self._boilerplate_index is None:
+                    self._boilerplate_index = len(self._result)
 
                 return
 
@@ -741,10 +734,9 @@ class AMPRenderer(HTMLParser, object):
         if tag == 'style':
             """Insert a placeholder into <style amp-custom> so we can add in
             the transformed styles later."""
-            if 'amp-custom' in (attr[0] for attr in attrs) and not self._added_translated_styles_placeholder:
+            if 'amp-custom' in (attr[0] for attr in attrs) and self._translated_styles_index is None:
                 self._found_custom_element = True
-                self._result.append(self.TRANSLATED_STYLES_PLACEHOLDER)
-                self._added_translated_styles_placeholder = True
+                self._translated_styles_index = len(self._result)
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -783,15 +775,14 @@ class AMPRenderer(HTMLParser, object):
             self._is_in_boilerplate = False
             return
 
-        if tag == 'head' and not self._found_custom_element and not self._added_translated_styles_placeholder:
+        if tag == 'head' and not self._found_custom_element and self._translated_styles_index is None:
             """If there was no custom element found in the head, add the
             placeholder at the end in case we have custom styles to add later.
 
             self._found_custom_element will remain False, and we’ll inspect
             that later to decide whether the <script> element itself needs to
             be added."""
-            self._result.append(self.TRANSLATED_STYLES_PLACEHOLDER)
-            self._added_translated_styles_placeholder = True
+            self._translated_styles_index = len(self._result)
 
         if tag in ['template', 'script']:
             self._is_render_paused = False
@@ -838,8 +829,6 @@ class AMPRenderer(HTMLParser, object):
         self.feed(data)
         self.close()
 
-        result = ''.join(self._result)
-
         # Combine translated styles by media query and value when possible
         media_batches = OrderedDict()
 
@@ -882,22 +871,35 @@ class AMPRenderer(HTMLParser, object):
             # Insert the amp-custom tag if necessary
             style_string = '<style amp-custom>%s</style>' % style_string
 
-        result = result.replace(self.TRANSLATED_STYLES_PLACEHOLDER, style_string)
+        if self._translated_styles_index is not None:
+            self._result.insert(self._translated_styles_index, style_string)
 
-        boilerplate = ''
-        noscript_boilerplate = ''
+            if (self._boilerplate_index or 0) > self._translated_styles_index:
+                self._boilerplate_index += 1
+
+            if (self._noscript_boilerplate_index or 0) > self._translated_styles_index:
+                self._noscript_boilerplate_index += 1
 
         self.no_boilerplate = True
         if self._is_render_cancelled or not self._should_remove_boilerplate:
             self.no_boilerplate = False
 
             # Restore the boilerplate
-            boilerplate = '<style amp-boilerplate>%s</style>' % self._boilerplate
-            noscript_boilerplate = '<style amp-boilerplate>%s</style>' % self._noscript_boilerplate
-            result = result.replace(' i-amphtml-no-boilerplate', '')
+            if self._boilerplate_index is not None:
+                boilerplate = '<style amp-boilerplate>%s</style>' % self._boilerplate
+                self._result.insert(self._boilerplate_index, boilerplate)
 
-        result = result.replace(self.BOILERPLATE_PLACEHOLDER, boilerplate)
-        result = result.replace(self.NOSCRIPT_BOILERPLATE_PLACEHOLDER, noscript_boilerplate)
+                if (self._noscript_boilerplate_index or 0) > self._boilerplate_index:
+                    self._noscript_boilerplate_index += 1
+
+            if self._noscript_boilerplate_index is not None:
+                noscript_boilerplate = '<style amp-boilerplate>%s</style>' % self._noscript_boilerplate
+                self._result.insert(self._noscript_boilerplate_index, noscript_boilerplate)
+
+        result = ''.join(self._result)
+
+        if self._is_render_cancelled or not self._should_remove_boilerplate:
+            result = result.replace(' i-amphtml-no-boilerplate', '')
 
         # Remove empty noscript tags; This happens when removing boilerplate
         result = result.replace('<noscript></noscript>', '')
