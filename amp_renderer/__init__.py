@@ -19,157 +19,186 @@ else:
     from html.parser import HTMLParser
 
 
+class TransformationError(Exception):
+    pass
+
+
+# The namedtuples will still be accessed using index notation for performance.
+Translation = namedtuple('Translation', 'selector statements')
+Sizes = namedtuple('Size', 'default other')
+Media = namedtuple('Media', 'query value')
+Sizer = namedtuple('Sizer', 'attrs maybe_img_attrs')
+
+
+class Translator:
+    @classmethod
+    def parse_sizes(cls, value):
+        # Normalize whitespace
+        size_values = re.split(r'\s*,\s*', value.strip())
+
+        try:
+            default = size_values.pop()
+        except IndexError:
+            return ''
+
+        other = []
+
+        for size_value in size_values:
+            size_parts = re.split(r'\)\s+', size_value)
+            if len(size_parts) != 2:
+                raise ValueError('Invalid sizes definition')
+
+            query = '{})'.format(size_parts[0])
+            query = query.replace(r'\s+', '')
+            value = size_parts[1]
+
+            media = Media(query=query, value=value)
+            other.append(media)
+
+        return Sizes(default=default, other=other)
+
+
+class MediaTranslator(Translator):
+    @classmethod
+    def translate(cls, value, element_id):
+        # Normalize whitespace
+        media = re.sub(r'\s+', ' ', value).strip()
+
+        if not media:
+            return None
+
+        if media[0] == '(':
+            media = 'all and {}'.format(media)
+
+        if media.startswith('not '):
+            media = media[4:]
+        else:
+            media = 'not {}'.format(media)
+
+        selector = '#{}'.format(element_id)
+
+        return Translation(
+            selector=selector,
+            statements=OrderedDict([
+                (media, 'display:none'),
+            ]))
+
+
+class SizesTranslator(Translator):
+    @classmethod
+    def translate(cls, value, element_id):
+        sizes = cls.parse_sizes(value)
+
+        selector = '#{}'.format(element_id)
+
+        statements = [(None, 'width:{}'.format(sizes[0]))]
+
+        other_sizes = sizes[1]
+
+        """The user agent will pick a width from the sizes attribute,
+        using the first item with a <media-condition> (the part in
+        parentheses) that evaluates to true. This means, we have to
+        reverse the order the media queries in CSS to emulate this
+        behavior (the last definition has precedence)."""
+        other_sizes.reverse()
+
+        for size in other_sizes:
+            statements.append((size[0], 'width:{}'.format(size[1])))
+
+        return Translation(
+            selector=selector,
+            statements=OrderedDict(statements))
+
+
+class HeightsTranslator(Translator):
+    @classmethod
+    def translate(cls, value, element_id):
+        sizes = cls.parse_sizes(value)
+
+        selector = '#{}>:first-child'.format(element_id)
+
+        statements = [(None, 'padding-top:{}'.format(sizes[0]))]
+
+        other_sizes = sizes[1]
+
+        """The user agent will pick a value from the heights attribute,
+        using the first item with a <media-condition> (the part in
+        parentheses) that evaluates to true. This means, we have to
+        reverse the order the media queries in CSS to emulate this
+        behavior (the last definition has precedence)."""
+        other_sizes.reverse()
+        for size in other_sizes:
+            statements.append((size[0], 'padding-top:{}'.format(size[1])))
+
+        return Translation(
+            selector=selector,
+            statements=OrderedDict(statements))
+
+
+TRANSLATIONS = {
+    'media': MediaTranslator,
+    'sizes': SizesTranslator,
+    'heights': HeightsTranslator,
+}
+
+
+class Layout(Enum):
+    NODISPLAY = 'nodisplay'
+    FIXED = 'fixed'
+    FIXED_HEIGHT = 'fixed-height'
+    RESPONSIVE = 'responsive'
+    CONTAINER = 'container'
+    FILL = 'fill'
+    FLEX_ITEM = 'flex-item'
+    INTRINSIC = 'intrinsic'
+
+    def get_class(self):
+        return 'i-amphtml-layout-%s' % self.value
+
+    def is_size_defined(self):
+        return self in SIZE_DEFINED_LAYOUTS
+
+
+# Store constants for performance
+LAYOUT_NODISPLAY = Layout.NODISPLAY
+LAYOUT_FIXED = Layout.FIXED
+LAYOUT_FIXED_HEIGHT = Layout.FIXED_HEIGHT
+LAYOUT_RESPONSIVE = Layout.RESPONSIVE
+LAYOUT_CONTAINER = Layout.CONTAINER
+LAYOUT_FILL = Layout.FILL
+LAYOUT_FLEX_ITEM = Layout.FLEX_ITEM
+LAYOUT_INTRINSIC = Layout.INTRINSIC
+
+SIZE_DEFINED_LAYOUTS = [
+    LAYOUT_FIXED,
+    LAYOUT_FIXED_HEIGHT,
+    LAYOUT_RESPONSIVE,
+    LAYOUT_FILL,
+    LAYOUT_FLEX_ITEM,
+    LAYOUT_INTRINSIC,
+]
+
+
+class CSSLengthUnit(Enum):
+    PX = 'px'
+    EM = 'em'
+    REM = 'rem'
+    VH = 'vh'
+    VW = 'vw'
+    VMIN = 'vmin'
+    VMAX = 'vmax'
+
+
+# Store constant for performance
+UNIT_PX = CSSLengthUnit.PX
+
+# The namedtuples will still be accessed using index notation for performance.
+CSSLength = namedtuple('CSSLength', 'numeral unit')
+CSS_LENGTH_AUTO = 'auto'
+CSS_LENGTH_ONE_PX = CSSLength(numeral=1, unit=UNIT_PX)
+
+
 class AMPNode:
-    class TransformationError(Exception):
-        pass
-
-    class Translator:
-        Translation = namedtuple('Translation', 'selector statements')
-
-        @classmethod
-        def parse_sizes(cls, value):
-            # Normalize whitespace
-            size_values = re.split(r'\s*,\s*', value.strip())
-
-            try:
-                default = size_values.pop()
-            except IndexError:
-                return ''
-
-            Sizes = namedtuple('Size', 'default other')  # noqa
-            sizes = Sizes(default=default, other=[])
-
-            Media = namedtuple('Media', 'query value')  # noqa
-            for size_value in size_values:
-                size_parts = re.split(r'\)\s+', size_value)
-                if len(size_parts) != 2:
-                    raise ValueError('Invalid sizes definition')
-
-                query = '{})'.format(size_parts[0])
-                query = query.replace(r'\s+', '')
-                value = size_parts[1]
-
-                media = Media(query=query, value=value)
-                sizes.other.append(media)
-
-            return sizes
-
-    class MediaTranslator(Translator):
-        @classmethod
-        def translate(cls, value, element_id):
-            # Normalize whitespace
-            media = re.sub(r'\s+', ' ', value).strip()
-
-            if not media:
-                return None
-
-            if media[0] == '(':
-                media = 'all and {}'.format(media)
-
-            if media.startswith('not '):
-                media = media[4:]
-            else:
-                media = 'not {}'.format(media)
-
-            selector = '#{}'.format(element_id)
-
-            return cls.Translation(
-                selector=selector,
-                statements=OrderedDict([
-                    (media, 'display:none'),
-                ]))
-
-    class SizesTranslator(Translator):
-        @classmethod
-        def translate(cls, value, element_id):
-            sizes = cls.parse_sizes(value)
-
-            selector = '#{}'.format(element_id)
-
-            statements = [(None, 'width:{}'.format(sizes.default))]
-
-            other_sizes = sizes.other
-
-            """The user agent will pick a width from the sizes attribute,
-            using the first item with a <media-condition> (the part in
-            parentheses) that evaluates to true. This means, we have to
-            reverse the order the media queries in CSS to emulate this
-            behavior (the last definition has precedence)."""
-            other_sizes.reverse()
-
-            for size in other_sizes:
-                statements.append((size.query, 'width:{}'.format(size.value)))
-
-            return cls.Translation(
-                selector=selector,
-                statements=OrderedDict(statements))
-
-    class HeightsTranslator(Translator):
-        @classmethod
-        def translate(cls, value, element_id):
-            sizes = cls.parse_sizes(value)
-
-            selector = '#{}>:first-child'.format(element_id)
-
-            statements = [(None, 'padding-top:{}'.format(sizes.default))]
-
-            other_sizes = sizes.other
-
-            """The user agent will pick a value from the heights attribute,
-            using the first item with a <media-condition> (the part in
-            parentheses) that evaluates to true. This means, we have to
-            reverse the order the media queries in CSS to emulate this
-            behavior (the last definition has precedence)."""
-            other_sizes.reverse()
-            for size in other_sizes:
-                statements.append((size.query, 'padding-top:{}'.format(size.value)))
-
-            return cls.Translation(
-                selector=selector,
-                statements=OrderedDict(statements))
-
-    TRANSLATIONS = {
-        'media': MediaTranslator,
-        'sizes': SizesTranslator,
-        'heights': HeightsTranslator,
-    }
-
-    class Layout(Enum):
-        NODISPLAY = 'nodisplay'
-        FIXED = 'fixed'
-        FIXED_HEIGHT = 'fixed-height'
-        RESPONSIVE = 'responsive'
-        CONTAINER = 'container'
-        FILL = 'fill'
-        FLEX_ITEM = 'flex-item'
-        INTRINSIC = 'intrinsic'
-
-        def get_class(self):
-            return 'i-amphtml-layout-{}'.format(self.value)
-
-        def is_size_defined(self):
-            return self in [
-                self.FIXED,
-                self.FIXED_HEIGHT,
-                self.RESPONSIVE,
-                self.FILL,
-                self.FLEX_ITEM,
-                self.INTRINSIC,
-            ]
-
-    class CSSLengthUnit(Enum):
-        PX = 'px'
-        EM = 'em'
-        REM = 'rem'
-        VH = 'vh'
-        VW = 'vw'
-        VMIN = 'vmin'
-        VMAX = 'vmax'
-
-    CSSLength = namedtuple('CSSLength', 'numeral unit')
-    CSS_LENGTH_AUTO = 'auto'
-    CSS_LENGTH_ONE_PX = CSSLength(numeral=1, unit=CSSLengthUnit.PX)
-
     def __init__(self, tag, attrs):
         self.tag = tag
 
@@ -214,21 +243,21 @@ class AMPNode:
             return None
 
         if length == 'auto':
-            return self.CSS_LENGTH_AUTO
+            return CSS_LENGTH_AUTO
 
         try:
             match = re.findall(r'(\d+(?:\.\d+)?)(.*)', length)[0]
             numeral = float(match[0])
         except (IndexError, ValueError):
-            raise self.TransformationError('Invalid size value')
+            raise TransformationError('Invalid size value')
 
         unit_value = match[1] or 'px'
         try:
-            unit = self.CSSLengthUnit(unit_value)
+            unit = CSSLengthUnit(unit_value)
         except ValueError:
-            raise self.TransformationError('Invalid size value')
+            raise TransformationError('Invalid size value')
 
-        return self.CSSLength(numeral=numeral, unit=unit)
+        return CSSLength(numeral=numeral, unit=unit)
 
     def transform(self, next_auto_id):
         """Apply the transformation.
@@ -264,7 +293,7 @@ class AMPNode:
         css_data = None
         did_strip_sizes = False
 
-        translations = [k for k in self._other_attrs if k in self.TRANSLATIONS]
+        translations = [k for k in self._other_attrs if k in TRANSLATIONS]
         if translations:
             potential_id = self.id or next_auto_id
 
@@ -280,12 +309,12 @@ class AMPNode:
                     continue
 
                 attribute_value = self._other_attrs[t]
-                Translator = self.TRANSLATIONS[t]  # noqa
+                Translator = TRANSLATIONS[t]  # noqa
 
                 try:
                     translation = Translator.translate(attribute_value, potential_id)
                 except ValueError:
-                    raise self.TransformationError('Invalid value for `{}` attribute'.format(t))
+                    raise TransformationError('Invalid value for `{}` attribute'.format(t))
                 else:
                     if translation:
                         css_data_items.append(translation)
@@ -309,32 +338,32 @@ class AMPNode:
         layout_value = self._other_attrs.get('layout')
 
         width = self._parse_length(self._other_attrs.get('width'))
-        if not isinstance(width, self.CSSLength) and layout_value in [None, 'fixed']:
+        if not isinstance(width, CSSLength) and layout_value in [None, 'fixed']:
             try:
                 width = {
-                    'amp-analytics': self.CSS_LENGTH_ONE_PX,
-                    'amp-audio': self.CSS_LENGTH_AUTO,
-                    'amp-pixel': self.CSS_LENGTH_ONE_PX,
-                    'amp-social-share': self.CSSLength(numeral=60, unit=self.CSSLengthUnit.PX),
+                    'amp-analytics': CSS_LENGTH_ONE_PX,
+                    'amp-audio': CSS_LENGTH_AUTO,
+                    'amp-pixel': CSS_LENGTH_ONE_PX,
+                    'amp-social-share': CSSLength(numeral=60, unit=UNIT_PX),
                 }[self.tag]
             except KeyError:
                 pass
 
         height = self._parse_length(self._other_attrs.get('height'))
-        if not isinstance(height, self.CSSLength) and layout_value in [None, 'fixed', 'fixed-height']:
+        if not isinstance(height, CSSLength) and layout_value in [None, 'fixed', 'fixed-height']:
             try:
                 height = {
-                    'amp-analytics': self.CSS_LENGTH_ONE_PX,
-                    'amp-audio': self.CSS_LENGTH_AUTO,
-                    'amp-pixel': self.CSS_LENGTH_ONE_PX,
-                    'amp-social-share': self.CSSLength(numeral=44, unit=self.CSSLengthUnit.PX),
+                    'amp-analytics': CSS_LENGTH_ONE_PX,
+                    'amp-audio': CSS_LENGTH_AUTO,
+                    'amp-pixel': CSS_LENGTH_ONE_PX,
+                    'amp-social-share': CSSLength(numeral=44, unit=UNIT_PX),
                 }[self.tag]
             except KeyError:
                 pass
 
         if not layout_value:
-            width_is_set = isinstance(width, self.CSSLength)
-            height_is_set = isinstance(height, self.CSSLength)
+            width_is_set = isinstance(width, CSSLength)
+            height_is_set = isinstance(height, CSSLength)
 
             if not any([width_is_set, height_is_set]):
                 layout_value = 'container'
@@ -351,65 +380,63 @@ class AMPNode:
                 layout_value = 'fixed'
 
         try:
-            layout = self.Layout(layout_value)
+            layout = Layout(layout_value)
         except ValueError:
-            raise self.TransformationError('Transformation not supported')
+            raise TransformationError('Transformation not supported')
 
         self._classes.append(layout.get_class())
         if layout.is_size_defined():
             self._classes.append('i-amphtml-layout-size-defined')
 
-        if layout == self.Layout.NODISPLAY:
+        if layout == LAYOUT_NODISPLAY:
             self._is_hidden = True
 
-        elif layout == self.Layout.FIXED:
-            if not all(isinstance(length, self.CSSLength) for length in [width, height]):
-                raise self.TransformationError('Length and width required for fixed layout')
+        elif layout == LAYOUT_FIXED:
+            if not all(isinstance(length, CSSLength) for length in [width, height]):
+                raise TransformationError('Length and width required for fixed layout')
 
             self._style = 'width:{wn}{wu};height:{hn}{hu};{existing_style}'.format(
-                wn=str(width.numeral).rstrip('0').rstrip('.'),
-                wu=width.unit.value,
-                hn=str(height.numeral).rstrip('0').rstrip('.'),
-                hu=height.unit.value,
+                wn=str(width[0]).rstrip('0').rstrip('.'),
+                wu=width[1].value,
+                hn=str(height[0]).rstrip('0').rstrip('.'),
+                hu=height[1].value,
                 existing_style=self._style)
 
-        elif layout == self.Layout.FIXED_HEIGHT:
-            if not isinstance(height, self.CSSLength):
-                raise self.TransformationError('Length and width required for fixed layout')
+        elif layout == LAYOUT_FIXED_HEIGHT:
+            if not isinstance(height, CSSLength):
+                raise TransformationError('Length and width required for fixed layout')
 
             self._style = 'height:{numeral}{unit};{existing_style}'.format(
-                numeral=str(height.numeral).rstrip('0').rstrip('.'),
-                unit=height.unit.value,
+                numeral=str(height[0]).rstrip('0').rstrip('.'),
+                unit=height[1].value,
                 existing_style=self._style)
 
-        elif layout == self.Layout.FLEX_ITEM:
-            if isinstance(height, self.CSSLength):
+        elif layout == LAYOUT_FLEX_ITEM:
+            if isinstance(height, CSSLength):
                 self._style = 'height:{numeral}{unit};{existing_style}'.format(
-                    numeral=str(height.numeral).rstrip('0').rstrip('.'),
-                    unit=height.unit.value,
+                    numeral=str(height[0]).rstrip('0').rstrip('.'),
+                    unit=height[1].value,
                     existing_style=self._style)
 
-            if isinstance(width, self.CSSLength):
+            if isinstance(width, CSSLength):
                 self._style = 'width:{numeral}{unit};{existing_style}'.format(
-                    numeral=str(width.numeral).rstrip('0').rstrip('.'),
-                    unit=width.unit.value,
+                    numeral=str(width[0]).rstrip('0').rstrip('.'),
+                    unit=width[1].value,
                     existing_style=self._style)
 
         self._other_attrs['i-amphtml-layout'] = layout.value
 
         # Create sizer if necessary
-        if all(isinstance(length, self.CSSLength) for length in [width, height]):
-            if all([width.numeral != 0, width.unit == height.unit]):
-                Sizer = namedtuple('Sizer', 'attrs maybe_img_attrs')
-
-                if layout == self.Layout.RESPONSIVE:
-                    padding = (height.numeral / width.numeral) * 100
+        if all(isinstance(length, CSSLength) for length in [width, height]):
+            if all([width[0] != 0, width[1] == height[1]]):
+                if layout == LAYOUT_RESPONSIVE:
+                    padding = (height[0] / width[0]) * 100
                     style = 'display:block;padding-top:{:.4f}%;'.format(padding)
                     self.sizer = Sizer(attrs=[('style', style)], maybe_img_attrs=None)
 
-                elif layout == self.Layout.INTRINSIC:
+                elif layout == LAYOUT_INTRINSIC:
                     svg_string = '<svg height="{h}" width="{w}" xmlns="http://www.w3.org/2000/svg" version="1.1"/>'
-                    svg_string = svg_string.format(height.numeral, width.numeral)
+                    svg_string = svg_string.format(height[0], width[0])
 
                     img_attrs = [
                         ('alt', ''),
@@ -614,7 +641,7 @@ class AMPRenderer(HTMLParser, object):
 
             try:
                 transformation = amp_element.transform(self._get_next_auto_id())
-            except AMPNode.TransformationError:
+            except TransformationError:
                 self._should_remove_boilerplate = False
             else:
                 if transformation:
@@ -652,7 +679,7 @@ class AMPRenderer(HTMLParser, object):
         # Add sizer if necessary
         if sizer:
             sizer_attr_strings = []
-            for attr in sizer.attrs:
+            for attr in sizer[0]:
                 if attr[1] is not None:
                     value = str(attr[1])
                     value = value.replace('"', '&quot;')
@@ -663,9 +690,9 @@ class AMPRenderer(HTMLParser, object):
 
             self._result = '{}<i-amphtml-sizer{}>'.format(self._result, sizer_attr_string)
 
-            if sizer.maybe_img_attrs is not None:
+            if sizer[1] is not None:
                 img_attr_strings = []
-                for attr in sizer.attrs:
+                for attr in sizer[1]:
                     if attr[1] is not None:
                         value = str(attr[1])
                         value = value.replace('"', '&quot;')
@@ -806,10 +833,7 @@ class AMPRenderer(HTMLParser, object):
         # Combine translated styles by media query and value when possible
         media_batches = OrderedDict()
 
-        for css_data in self._translated_css_data:
-            selector = css_data.selector
-            statements = css_data.statements
-
+        for selector, statements in self._translated_css_data:
             media_batch_key = tuple(statements.keys())
             batch = media_batches.get(media_batch_key) or OrderedDict()
 

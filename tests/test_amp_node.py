@@ -6,26 +6,24 @@ from builtins import bytes  # noqa
 from builtins import str  # noqa
 
 # AMP Renderer
-from amp_renderer import AMPNode
+from amp_renderer import Layout, AMPNode
 
 
 class TestLayout:
-    Layout = AMPNode.Layout
-
     def test_get_class(self):
-        for layout in list(self.Layout):
+        for layout in list(Layout):
             assert layout.get_class() == 'i-amphtml-layout-{}'.format(layout.value)
 
     def test_is_size_defined(self):
         size_defined_layouts = [
-            self.Layout.FIXED,
-            self.Layout.FIXED_HEIGHT,
-            self.Layout.RESPONSIVE,
-            self.Layout.FILL,
-            self.Layout.FLEX_ITEM,
-            self.Layout.INTRINSIC,
+            Layout.FIXED,
+            Layout.FIXED_HEIGHT,
+            Layout.RESPONSIVE,
+            Layout.FILL,
+            Layout.FLEX_ITEM,
+            Layout.INTRINSIC,
         ]
-        for layout in list(self.Layout):
+        for layout in list(Layout):
             assert layout.is_size_defined() == (layout in size_defined_layouts)
 
 
@@ -67,7 +65,7 @@ class TestNode:
         assert set(class_name.split(' ')) == set(self.CLASSES + ['i-amphtml-layout-container'])
 
         layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
-        assert layout == AMPNode.Layout.CONTAINER.value
+        assert layout == Layout.CONTAINER.value
 
     def test_2(self):
         tag = 'amp-test'
@@ -101,7 +99,7 @@ class TestNode:
         ])
 
         layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
-        assert layout == AMPNode.Layout.FIXED.value
+        assert layout == Layout.FIXED.value
 
     def test_3(self):
         tag = 'amp-test'
@@ -137,4 +135,4 @@ class TestNode:
         ])
 
         layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
-        assert layout == AMPNode.Layout.RESPONSIVE.value
+        assert layout == Layout.RESPONSIVE.value
