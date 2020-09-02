@@ -28,4 +28,8 @@ class TestSpeed:
         renderer = AMPRenderer(runtime_version=AMP_RUNTIME_VERSION, runtime_styles=AMP_RUNTIME_STYLES)
         renderer.render(html)
 
+        """This test is for checking large inputs. Replace the contents of
+        <input_path>/speed/input.html with a very large HTML file; The test can
+        then be profiled with pytest."""
+
         assert True
