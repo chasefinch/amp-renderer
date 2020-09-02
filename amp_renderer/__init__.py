@@ -630,7 +630,11 @@ class AMPRenderer(HTMLParser, object):
             # Don’t remove boilerplate if `amp-audio` is included
             self._should_remove_boilerplate = False
 
-        elif not self._is_render_cancelled and not self._is_render_paused and tag.startswith('amp-'):
+        elif not self._is_render_cancelled and \
+                not self._is_render_paused and \
+                tag.startswith('amp-') and \
+                'norender' not in (attr[0] for attr in attrs):
+
             if tag == 'amp-experiment':
                 """Start the finite automata to see if we need to keep the
                 boilerplate"""
