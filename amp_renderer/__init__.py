@@ -633,7 +633,7 @@ class AMPRenderer(HTMLParser, object):
         elif not self._is_render_cancelled and \
                 not self._is_render_paused and \
                 tag.startswith('amp-') and \
-                'norender' not in (attr[0] for attr in attrs):
+                'data-norender' not in (attr[0] for attr in attrs):
 
             if tag == 'amp-experiment':
                 """Start the finite automata to see if we need to keep the
