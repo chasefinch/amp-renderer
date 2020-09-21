@@ -101,7 +101,7 @@ There are still some aspects of the official AMP Optimizer implementation that h
 
 ### Dynamic attributes
 - [x] ~Support `sizes`, `media`, and `heights` via CSS injection~
-- [x] Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes
+- [x] ~Group CSS injections for `media` attributes by shared media queries to reduce necessary bytes~
 - [ ] Support percent values in `heights`
 - [ ] Warn or fail if CSS injection puts the `amp-custom` element over the byte limit
 
@@ -115,6 +115,8 @@ There are still some aspects of the official AMP Optimizer implementation that h
 
 The Python AMP Renderer does not insert `preload` links into the `head` of the DOM object for hero images; This can be done by hand for more control over the critical path.
 
+<!--
+
 Since AMPRenderer adds the `amp-runtime` styles to the document, you can also use the [AMP Module Build](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites#amp-module-build-(coming-soon)) by hand. To take advantage of this, rewrite the import scripts such that imports like this:
 
 	<script async src="https://cdn.ampproject.org/v0.js"></script>
@@ -123,3 +125,5 @@ Since AMPRenderer adds the `amp-runtime` styles to the document, you can also us
 
 	<script type="module" async src="https://cdn.ampproject.org/v0.mjs"></script>
 	<script nomodule async src="https://cdn.ampproject.org/v0.js"></script> 
+
+-->
