@@ -332,7 +332,8 @@ class AMPNode:
 
             if self.should_strip_translated_attrs:
                 for t in translations:
-                    del self._other_attrs[t]
+                    if not (t == 'sizes' and not did_strip_sizes):
+                        del self._other_attrs[t]
 
         # Apply the transformation
         layout_value = self._other_attrs.get('layout')
