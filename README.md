@@ -81,7 +81,7 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 Sort imports (Requires Python >= 3.6):
 
-	make normal
+	make format
 
 Lint (Requires Python >= 3.6):
 

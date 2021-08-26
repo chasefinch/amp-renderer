@@ -1,6 +1,6 @@
 default: lint test
 
-normal:
+format:
 	isort .
 
 lint:
@@ -12,5 +12,5 @@ test:
 	coverage run --source=amp_renderer -m pytest
 	coverage report -m
 
-dev:
-	pip install -r requirements/dev.txt
+develop:
+	pip install -r requirements/develop.txt
