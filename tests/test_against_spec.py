@@ -1,27 +1,16 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import, unicode_literals
 
 # Standard Library
 import codecs
 import os
 import re
-import sys
-from builtins import bytes  # noqa
-from builtins import str  # noqa
+from html.parser import HTMLParser
 
 # Third Party
 import pytest
 
 # AMP Renderer
 from amp_renderer import AMPRenderer
-
-if sys.version_info[0] < 3:
-    # Third Party
-    from HTMLParser import HTMLParser
-
-else:
-    # Standard Library
-    from html.parser import HTMLParser
 
 
 class OutputNormalizer(HTMLParser, object):
