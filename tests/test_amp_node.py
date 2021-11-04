@@ -1,20 +1,19 @@
-# -*- coding: UTF-8 -*-
-from __future__ import absolute_import, unicode_literals
-
-# Standard Library
-from builtins import bytes  # noqa
-from builtins import str  # noqa
+"""Tests for AMPNode and related functionality."""
 
 # AMP Renderer
 from amp_renderer import AMPNode, Layout
 
 
 class TestLayout:
+    """Test the layout classes."""
+
     def test_get_class(self):
+        """Test the get_class method."""
         for layout in list(Layout):
-            assert layout.get_class() == 'i-amphtml-layout-{}'.format(layout.value)
+            assert layout.get_class() == "i-amphtml-layout-{}".format(layout.value)
 
     def test_is_size_defined(self):
+        """Test the is_size_defined method."""
         size_defined_layouts = [
             Layout.FIXED,
             Layout.FIXED_HEIGHT,
@@ -28,29 +27,27 @@ class TestLayout:
 
 
 class TestNode:
-    ID = 'testID'
-    STYLE = 'test:style;'
-    CLASSES = ['class1', 'class2']
-    DUMMY = 'dummy'
+    """Test the AMPNode class."""
 
-    def _get_attr_value_or_fail(self, attrs, name):
-        matches = [x[1] for x in attrs if x[0] == name]
-        assert len(matches) == 1
-        return matches[0]
+    element_id = "testID"
+    style = "test:style;"
+    classes = ("class1", "class2")
+    dummy = "dummy"
 
     def test_1(self):
-        tag = 'amp-test'
+        """Test #1."""
+        tag = "amp-test"
         attrs = [
-            ('hidden', 'hidden'),
-            ('id', self.ID),
-            ('style', self.STYLE),
-            ('class', ' '.join(self.CLASSES)),
-            ('data-dummy', self.DUMMY),
+            ("hidden", "hidden"),
+            ("id", self.element_id),
+            ("style", self.style),
+            ("class", " ".join(self.classes)),
+            ("data-dummy", self.dummy),
         ]
 
         node = AMPNode(tag, attrs)
 
-        assert node.id == self.ID
+        assert node.element_id == self.element_id
         assert node.tag == tag
 
         assert set(node.get_attrs()) == set(attrs)
@@ -61,58 +58,63 @@ class TestNode:
         transformed_attrs = node.get_attrs()
         assert len(transformed_attrs) == 6
 
-        class_name = self._get_attr_value_or_fail(transformed_attrs, 'class')
-        assert set(class_name.split(' ')) == set(self.CLASSES + ['i-amphtml-layout-container'])
+        class_name = self._get_attr_value_or_fail(transformed_attrs, "class")
+        assert set(class_name.split(" ")) == set(self.classes + ("i-amphtml-layout-container",))
 
-        layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
+        layout = self._get_attr_value_or_fail(transformed_attrs, "i-amphtml-layout")
         assert layout == Layout.CONTAINER.value
 
     def test_2(self):
-        tag = 'amp-test'
+        """Test #2."""
+        tag = "amp-test"
         attrs = [
-            ('style', self.STYLE),
-            ('class', ' '.join(self.CLASSES)),
-            ('layout', 'fixed'),
-            ('width', '113'),
-            ('height', '140px'),
-            ('data-dummy', self.DUMMY),
+            ("style", self.style),
+            ("class", " ".join(self.classes)),
+            ("layout", "fixed"),
+            ("width", "113"),
+            ("height", "140px"),
+            ("data-dummy", self.dummy),
         ]
 
         node = AMPNode(tag, attrs)
 
         assert node.tag == tag
-        assert node.id is None
+        assert node.element_id is None
 
         assert set(node.get_attrs()) == set(attrs)
 
         transformations = node.transform(1)
         assert transformations is None
-        assert node.id is None
+        assert node.element_id is None
 
         transformed_attrs = node.get_attrs()
         assert len(transformed_attrs) == 7
 
-        class_name = self._get_attr_value_or_fail(transformed_attrs, 'class')
-        assert set(class_name.split(' ')) == set(self.CLASSES + [
-            'i-amphtml-layout-fixed',
-            'i-amphtml-layout-size-defined',
-        ])
+        class_name = self._get_attr_value_or_fail(transformed_attrs, "class")
+        assert set(class_name.split(" ")) == set(
+            self.classes
+            + (
+                "i-amphtml-layout-fixed",
+                "i-amphtml-layout-size-defined",
+            ),
+        )
 
-        layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
+        layout = self._get_attr_value_or_fail(transformed_attrs, "i-amphtml-layout")
         assert layout == Layout.FIXED.value
 
     def test_3(self):
-        tag = 'amp-test'
+        """Test #3."""
+        tag = "amp-test"
         attrs = [
-            ('style', self.STYLE),
-            ('class', ' '.join(self.CLASSES)),
-            ('layout', 'responsive'),
-            ('width', '113'),
-            ('height', 'auto'),
-            ('media', '(max-width:1024px)'),
-            ('srcset', 'https://example.com/1x 133w, https://example.com/2x 266w'),
-            ('sizes', '(max-width:533px) 133px, 100vw'),
-            ('data-dummy', self.DUMMY),
+            ("style", self.style),
+            ("class", " ".join(self.classes)),
+            ("layout", "responsive"),
+            ("width", "113"),
+            ("height", "auto"),
+            ("media", "(max-width:1024px)"),
+            ("srcset", "https://example.com/1x 133w, https://example.com/2x 266w"),
+            ("sizes", "(max-width:533px) 133px, 100vw"),
+            ("data-dummy", self.dummy),
         ]
 
         node = AMPNode(tag, attrs)
@@ -121,18 +123,26 @@ class TestNode:
 
         assert set(node.get_attrs()) == set(attrs)
 
-        transformations = node.transform('i-amp-1')
-        assert node.id == 'i-amp-1'
+        transformations = node.transform("i-amp-1")
+        assert node.element_id == "i-amp-1"
         assert transformations[1]
 
         transformed_attrs = node.get_attrs()
         assert len(transformed_attrs) == 9
 
-        class_name = self._get_attr_value_or_fail(transformed_attrs, 'class')
-        assert set(class_name.split(' ')) == set(self.CLASSES + [
-            'i-amphtml-layout-responsive',
-            'i-amphtml-layout-size-defined',
-        ])
+        class_name = self._get_attr_value_or_fail(transformed_attrs, "class")
+        assert set(class_name.split(" ")) == set(
+            self.classes
+            + (
+                "i-amphtml-layout-responsive",
+                "i-amphtml-layout-size-defined",
+            ),
+        )
 
-        layout = self._get_attr_value_or_fail(transformed_attrs, 'i-amphtml-layout')
+        layout = self._get_attr_value_or_fail(transformed_attrs, "i-amphtml-layout")
         assert layout == Layout.RESPONSIVE.value
+
+    def _get_attr_value_or_fail(self, attrs, name):
+        matches = [attr[1] for attr in attrs if attr[0] == name]
+        assert len(matches) == 1
+        return matches[0]

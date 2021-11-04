@@ -1,20 +1,25 @@
 -r base.txt
 
-coverage
-pytest
+coverage==6.0.0
+pytest==6.0.2
 
-isort
-flake8
-flake8
-  pyflakes
-  pep8
-  pep8-naming
-  mccabe
-  flake8-coding
-  flake8-commas
-  flake8-comprehensions
-  flake8-docstrings
-    flake8-rst-docstrings
-  flake8-isort
-  flake8-quotes
-  flake8-print
+black==21.9b0
+  pathspec==0.9.0
+add-trailing-comma==2.2.0
+autoflake==1.4
+docformatter==1.4
+unify==0.5
+isort==5.9.3
+absolufy-imports==0.3.0
+flake8==3.9.2
+  git+https://github.com/BringFido/python-styleguide@0.15.3.1
+  flake8-builtins==1.5.3
+  flake8-coding==1.3.2
+  flake8-django==1.1.2
+  flake8-print==4.0.0
+  flake8-simplify==0.14.2
+  flake8-todos==0.1.5
+
+  # Lock version
+  pyflakes==2.3.0
+  pycodestyle==2.7.0

@@ -6,3 +6,6 @@ amp_renderer.egg-info
 build/
 prof/
 dist/
+bin/
+lib/
+pyvenv.cfg
