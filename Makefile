@@ -1,4 +1,4 @@
-default: lint test
+default: format lint test
 
 format:
 	@echo "Converting imports to relative imports where possible..."
@@ -23,11 +23,11 @@ format:
 
 	@echo
 	@echo "Formatting Python files..."
-	@black . --experimental-string-processing --line-length 99 --target-version py38 --quiet
+	@black . --line-length 99 --target-version py38 --quiet
 	@# Add trailing commas to dangling lines and function calls
 	@find . \( -path ./lib -o -path ./bin -o -path ./dist -o -path ./prof -o -path ./build -o -path ./git \) -prune -o -name '*.py' -exec add-trailing-comma --py35-plus {} \;
 	@# Format again after adding trailing commas
-	@black . --experimental-string-processing --line-length 99 --target-version py38 --quiet
+	@black . --line-length 99 --target-version py38 --quiet
 	@echo "...done."
 	@echo
 
@@ -46,7 +46,7 @@ test:
 	find . -name "*.pyc" -delete
 	coverage erase
 	coverage run --source=amp_renderer -m pytest --ignore=bin --ignore=lib --ignore=dist --ignore=prof --ignore=build
-	coverage report -m
+	coverage report -m --fail-under 90
 
 update:
 	${CURDIR}/bin/pip install -U pip wheel
