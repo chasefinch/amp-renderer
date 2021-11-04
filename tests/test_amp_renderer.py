@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 # AMP Renderer
 from amp_renderer import AMPRenderer
 

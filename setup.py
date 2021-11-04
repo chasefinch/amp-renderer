@@ -1,6 +1,3 @@
-
-# Third Party
-# -*- coding: UTF-8 -*-
 # Third Party
 import setuptools
 

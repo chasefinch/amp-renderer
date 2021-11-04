@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-
 # Standard Library
 import codecs
 import os
