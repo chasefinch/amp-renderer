@@ -1,12 +1,14 @@
+"""Define metadata for AMP Renderer."""
+
 # Third Party
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+with open("README.md", "r") as readme_file:
+    long_description = readme_file.read()
 
 setuptools.setup(
     name="amp-renderer",
-    version="1.4.3",
+    version="2.0.0",
     author="Chase Finch",
     author_email="chase@finch.email",
     description="Unofficial Python port of server-side rendering from AMP Optimizer",
@@ -16,8 +18,6 @@ setuptools.setup(
     url="https://github.com/chasefinch/amp-renderer",
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
@@ -26,9 +26,5 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=2.7",
-    install_requires=[
-        'enum34;python_version<"3.4"',
-        'future;python_version<="2.7"',
-    ],
+    python_requires=">=3.5",
 )
