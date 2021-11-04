@@ -1,8 +1,8 @@
 # AMP Renderer
 
-![Python 3.5+](https://img.shields.io/badge/python-3.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
+![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
-Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Supports Python 3.5 and above.
+Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Supports Python 3.6 and above.
 
 AMP Renderer performs the following optimizations:
 1. Inject the specific layout markup into each AMP element
