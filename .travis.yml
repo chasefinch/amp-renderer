@@ -4,7 +4,9 @@ python:
   - "3.7"
   - "3.8"
   - "3.9"
+before_install:
+  - python -m pip install --upgrade pip
 install:
-  - pip install -r requirements/test.txt
+  - pip install -r requirements/test.txt --use-deprecated=legacy-resolver
 script:
-  "make"
+  - "make"
