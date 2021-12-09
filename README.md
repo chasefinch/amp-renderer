@@ -79,7 +79,7 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 ## Testing, etc.
 
-Install requrements:
+Install development requirements:
 
 	make install
 
