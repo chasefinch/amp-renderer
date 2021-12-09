@@ -38,7 +38,7 @@ If boilerplate styles can’t be removed, the attribute `no_boilerplate` will be
 If using Django, you can use the [Django AMP Renderer middleware](https://github.com/chasefinch/django-amp-renderer).
 
 Otherwise, install via PyPI:
-	
+
 	pip install amp-renderer
 
 Minimal usage:
@@ -78,6 +78,10 @@ Remove comments and/or trim attributes:
 The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/library/html.parser.html), and can be similarly extended.
 
 ## Testing, etc.
+
+Install requrements:
+
+  make install
 
 Sort imports (Requires Python >= 3.8):
 
@@ -124,6 +128,6 @@ Since AMPRenderer adds the `amp-runtime` styles to the document, you can also us
 ...become 2-part imports based on [Javascript Modules](https://v8.dev/features/modules#browser), like this:
 
 	<script type="module" async src="https://cdn.ampproject.org/v0.mjs"></script>
-	<script nomodule async src="https://cdn.ampproject.org/v0.js"></script> 
+	<script nomodule async src="https://cdn.ampproject.org/v0.js"></script>
 
 -->

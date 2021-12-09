@@ -48,8 +48,8 @@ test:
 	coverage run --source=amp_renderer -m pytest --ignore=bin --ignore=lib --ignore=dist --ignore=prof --ignore=build
 	coverage report -m --fail-under 90
 
-update:
+install:
 	${CURDIR}/bin/pip install -U pip wheel
 	${CURDIR}/bin/pip install -r requirements/develop.txt --use-deprecated=legacy-resolver
 
-.PHONY: default format lint test update
+.PHONY: default format lint test install
