@@ -8,7 +8,7 @@ with open("README.md", "r") as readme_file:
 
 setuptools.setup(
     name="amp-renderer",
-    version="2.0.0",
+    version="2.0.1",
     author="Chase Finch",
     author_email="chase@finch.email",
     description="Unofficial Python port of server-side rendering from AMP Optimizer",
@@ -22,6 +22,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
