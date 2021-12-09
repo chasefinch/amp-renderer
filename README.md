@@ -81,7 +81,7 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 Install requrements:
 
-  make install
+	make install
 
 Sort imports (Requires Python >= 3.8):
 
