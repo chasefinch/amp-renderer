@@ -2,7 +2,7 @@
 
 ![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/amp-renderer) ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
-Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Supports Python 3.6 and above.
+Unofficial Python port of [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/explainer/?format=websites) from [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer). Tested in Python 3.8 and above, but works on Python 3.6+.
 
 AMP Renderer performs the following optimizations:
 1. Inject the specific layout markup into each AMP element
@@ -79,15 +79,15 @@ The AMPRenderer class inherits from [HTMLParser](https://docs.python.org/3/libra
 
 ## Testing, etc.
 
-Install development requirements:
+Install development requirements (Requires Python >= 3.8):
 
 	make install
 
-Sort imports (Requires Python >= 3.8):
+Sort imports:
 
 	make format
 
-Lint (Requires Python >= 3.8):
+Lint:
 
 	make lint
 
