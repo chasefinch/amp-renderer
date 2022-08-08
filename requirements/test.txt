@@ -1,6 +1,6 @@
 -r base.txt
 
-coverage==6.4.1
+coverage==6.4.3
 pytest==7.1.2
 
 black==22.6.0
