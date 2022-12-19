@@ -7,7 +7,7 @@ black==22.10.0
   pathspec==0.10.1
 add-trailing-comma==2.3.0
 autoflake==1.7.7
-docformatter==1.5.0
+docformatter==1.5.1
 unify==0.5
 isort==5.11.4
 absolufy-imports==0.3.1
