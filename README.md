@@ -68,8 +68,8 @@ Minimal usage:
 
 Remove comments and/or trim attributes:
 
-	renderer.should_strip_comments = True
-	renderer.should_trim_attributes = True
+	renderer.strip_comments = True
+	renderer.trim_attributes = True
 	result = renderer.render(original_html)
 
 	print(result)

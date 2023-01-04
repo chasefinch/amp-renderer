@@ -221,7 +221,7 @@ class AMPNode:
         self.sizer = None
         self.maybe_img_attrs = None
 
-        self.should_strip_translated_attrs = True
+        self.strip_translated_attrs = True
 
         for attr in attrs:
             if attr[0] == "id":
@@ -307,7 +307,7 @@ class AMPNode:
 
                 css_data = css_data_items, used_auto_id
 
-            if self.should_strip_translated_attrs:
+            if self.strip_translated_attrs:
                 for attr_to_translate in translations:
                     if not (attr_to_translate == "sizes" and not did_strip_sizes):
                         del self._other_attrs[attr_to_translate]
@@ -406,10 +406,10 @@ class AMPNode:
         self._other_attrs["i-amphtml-layout"] = layout.value
 
         # Create sizer if necessary
-        should_create_sizer = all(
+        create_sizer = all(
             isinstance(length, CSSLength) for length in (width, height)
         ) and all([width[0] != 0, width[1] == height[1]])
-        if should_create_sizer:
+        if create_sizer:
             if layout == LAYOUT_RESPONSIVE:
                 padding = (height[0] / width[0]) * 100
                 style = f"display:block;padding-top:{padding:.4f}%;"
@@ -521,8 +521,8 @@ class AMPRenderer(HTMLParser):
         if not self.runtime_styles or not self.runtime_version:
             self._is_test_mode = True
 
-        self.should_trim_attrs = False
-        self.should_strip_comments = False
+        self.trim_attrs = False
+        self.strip_comments = False
 
         # Always keep charrefs intact; This class is meant to reproduce HTML.
         self.convert_charrefs = False
@@ -531,7 +531,7 @@ class AMPRenderer(HTMLParser):
         """Reset the state of the renderer so that it can be run again."""
         super().reset()
 
-        self._should_remove_boilerplate = True
+        self._remove_boilerplate = True
 
         self._boilerplate = ""
         self._is_in_boilerplate = False
@@ -621,7 +621,7 @@ class AMPRenderer(HTMLParser):
                     if attr[0] == "custom-element" and attr[1] in RENDER_DELAYING_EXTENSIONS:
                         # Don’t remove boilerplate if one of the render-
                         # delaying extensions is included.
-                        self._should_remove_boilerplate = False
+                        self._remove_boilerplate = False
 
         sizer = None
         maybe_img_attrs = None
@@ -634,7 +634,7 @@ class AMPRenderer(HTMLParser):
 
         if tag == "amp-audio":
             # Don’t remove boilerplate if `amp-audio` is included
-            self._should_remove_boilerplate = False
+            self._remove_boilerplate = False
 
         elif is_amp_element:
             if tag == "amp-experiment":
@@ -647,7 +647,7 @@ class AMPRenderer(HTMLParser):
             try:
                 transformation = amp_element.transform(self._get_next_auto_id())
             except TransformationError:
-                self._should_remove_boilerplate = False
+                self._remove_boilerplate = False
             else:
                 if transformation:
                     translations, used_auto_id = transformation
@@ -667,7 +667,7 @@ class AMPRenderer(HTMLParser):
             attr_name = attr[0].lower()
             if attr[1] is not None:
                 value = str(attr[1])
-                if self.should_trim_attrs:
+                if self.trim_attrs:
                     value = value.strip()
                 value = value.replace('"', "&quot;")
                 attr_strings.append(f' {attr_name}="{value}"')
@@ -781,7 +781,7 @@ class AMPRenderer(HTMLParser):
             self._is_expecting_experiment_end = False
 
             if tag == "amp-experiment":
-                self._should_remove_boilerplate = False
+                self._remove_boilerplate = False
 
         if tag == "noscript":
             self._is_in_noscript = False
@@ -822,7 +822,7 @@ class AMPRenderer(HTMLParser):
 
     def handle_comment(self, comment):
         """Process an HTML comment."""
-        if not self.should_strip_comments:
+        if not self.strip_comments:
             self._result.append(f"<!--{comment}-->")
 
     def render(self, amp_html):
@@ -887,7 +887,7 @@ class AMPRenderer(HTMLParser):
                 self._noscript_boilerplate_index += 1
 
         self.no_boilerplate = True
-        if self._is_render_cancelled or not self._should_remove_boilerplate:
+        if self._is_render_cancelled or not self._remove_boilerplate:
             self.no_boilerplate = False
 
             # Restore the boilerplate
@@ -906,7 +906,7 @@ class AMPRenderer(HTMLParser):
 
         result = "".join(self._result)
 
-        if self._is_render_cancelled or not self._should_remove_boilerplate:
+        if self._is_render_cancelled or not self._remove_boilerplate:
             result = result.replace(" i-amphtml-no-boilerplate", "")
 
         # Remove empty noscript tags; This happens when removing boilerplate

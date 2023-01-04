@@ -11,12 +11,12 @@ class RendererFactory:
     """Set up a renderer on demand to be tested."""
 
     @classmethod
-    def make(cls, should_trim_attrs=False, should_strip_comments=False):
+    def make(cls, trim_attrs=False, strip_comments=False):
         """Generate and return a new AMPRenderer."""
         renderer = AMPRenderer(runtime_version=RUNTIME_VERSION, runtime_styles=RUNTIME_STYLES)
 
-        renderer.should_trim_attrs = should_trim_attrs
-        renderer.should_strip_comments = should_strip_comments
+        renderer.trim_attrs = trim_attrs
+        renderer.strip_comments = strip_comments
 
         return renderer
 
@@ -79,7 +79,7 @@ class TestRenderer:
             </div>
         """
 
-        renderer = RendererFactory.make(should_trim_attrs=True)
+        renderer = RendererFactory.make(trim_attrs=True)
         result = renderer.render(html)
 
         assert result == expected_result
@@ -90,7 +90,7 @@ class TestRenderer:
         html = "<div><!-- This isn’t important. -->Hello there!</div>"
         expected_result = "<div>Hello there!</div>"
 
-        renderer = RendererFactory.make(should_strip_comments=True)
+        renderer = RendererFactory.make(strip_comments=True)
         result = renderer.render(html)
 
         assert result == expected_result
