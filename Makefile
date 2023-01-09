@@ -25,7 +25,7 @@ format:
 	@echo "Formatting Python files..."
 	@black . --line-length 99 --target-version py38 --quiet
 	@# Add trailing commas to dangling lines and function calls
-	@find . \( -path ./lib -o -path ./bin -o -path ./dist -o -path ./prof -o -path ./build -o -path ./git \) -prune -o -name '*.py' -exec add-trailing-comma --py35-plus {} \;
+	@find . \( -path ./lib -o -path ./bin -o -path ./dist -o -path ./prof -o -path ./build -o -path ./git \) -prune -o -name '*.py' -exec add-trailing-comma --py36-plus {} \;
 	@# Format again after adding trailing commas
 	@black . --line-length 99 --target-version py38 --quiet
 	@echo "...done."
