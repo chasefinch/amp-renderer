@@ -9,7 +9,7 @@ add-trailing-comma==2.4.0
 autoflake==2.0.0
 docformatter==1.5.1
 unify==0.5
-isort==5.11.4
+isort==5.12.0
 absolufy-imports==0.3.1
 flake8==5.0.4
   git+https://github.com/BringFido/python-styleguide@0.15.3.1
