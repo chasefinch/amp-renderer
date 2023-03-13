@@ -6,7 +6,7 @@ pytest==7.2.0
 black==22.12.0
   pathspec==0.10.3
 add-trailing-comma==2.4.0
-autoflake==2.0.0
+autoflake==2.0.2
 docformatter==1.5.1
 unify==0.5
 isort==5.11.4
