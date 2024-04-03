@@ -106,7 +106,7 @@ class TestSpec:
         "does_not_appy_transformations_if_already_present",
         "does_not_break_noscript_tags",
         "does_not_change_content_in_templates",
-        "does_not_transform_amp_audio",
+        "transform_amp_audio",
         "does_not_transform_invalid_measurements",
         "empty_custom_styles",
         "noscript_then_boilerplate_removed",

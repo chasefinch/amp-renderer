@@ -556,6 +556,9 @@ class AMPRenderer(HTMLParser):
 
         self._translated_styles_index = None
 
+        self._is_inside_amp_audio_element = False
+        self._is_audio_control_element_found_in_amp_audio = False
+
         with contextlib.suppress(AttributeError):
             del self.no_boilerplate
 
@@ -632,11 +635,12 @@ class AMPRenderer(HTMLParser):
             and "data-norender" not in {attr[0] for attr in attrs}
         )
 
-        if tag == "amp-audio":
-            # Don’t remove boilerplate if `amp-audio` is included
-            self._remove_boilerplate = False
-
-        elif is_amp_element:
+        if tag == "audio" and self._is_inside_amp_audio_element:
+            self._is_audio_control_element_found_in_amp_audio = True
+            pass
+        elif tag == 'amp-audio' :
+            self._is_inside_amp_audio_element = True
+        elif is_amp_element :
             if tag == "amp-experiment":
                 # Start the finite automata to see if we need to keep the
                 # boilerplate.
@@ -756,6 +760,18 @@ class AMPRenderer(HTMLParser):
     def handle_endtag(self, tag):
         """Process a closing tag."""
         tag = tag.lower()
+
+        if tag == "amp-audio":
+            if not self._is_audio_control_element_found_in_amp_audio:
+                #append audio element if not present inside the amp-audio
+                audio_element = (
+                    "<audio controls></audio>"
+                )
+                self._result.append(audio_element)
+
+            #mark exit from the amp audio element by resetting the attributes
+            self._is_inside_amp_audio_element = False
+            self._is_audio_control_element_found_in_amp_audio = False
 
         if self._is_expecting_experiment_data:
             # Finish ingesting JSON data
