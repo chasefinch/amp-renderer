@@ -1,0 +1,5 @@
+[rules]
+all = "error"
+
+[src]
+exclude = ["build", "dist", "bin", "lib", "prof"]

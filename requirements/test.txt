@@ -1,24 +1,4 @@
 -r base.txt
 
-coverage==7.2.3
-pytest==7.2.0
-
-black==22.12.0
-  pathspec==0.10.3
-add-trailing-comma==2.4.0
-autoflake==2.0.0
-docformatter==1.5.1
-unify==0.5
-isort==5.11.4
-absolufy-imports==0.3.1
-flake8==5.0.4
-  git+https://github.com/BringFido/python-styleguide@0.15.3.1
-  flake8-builtins==2.1.0
-  flake8-coding==1.3.2
-  flake8-print==5.0.0
-  flake8-simplify==0.19.3
-  flake8-todos==0.2.1
-
-  # Lock version
-  pyflakes==3.0.1
-  pycodestyle==2.10.0
+coverage==7.13.5
+pytest==8.3.5

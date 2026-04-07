@@ -1,0 +1,56 @@
+# See https://www.chasefinch.com/nitpick-style.toml
+
+line-length = 99
+target-version = "py313"
+output-format = "grouped"
+
+[format]
+quote-style = "double"
+
+[lint]
+allowed-confusables = ["'", "\u2019", "\u00d7", "\u2013"]
+select = ["ALL"]
+ignore = [
+	# General configuration (see https://www.chasefinch.com/nitpick-style.toml)
+	"D203", "D213", "TID252", "S101", "INT001",  # Rule conflicts
+	"COM812", "ISC001", "Q000", "Q003",  # Recommended when using formatter
+	"RUF100",  # Conflicts with WPS
+	"RUF102",  # Conflicts with WPS which uses unknown rule codes
+	"ARG",  # Unused arguments often required in hierarchy
+	"ERA",  # Commented-out code is OK
+	"S105", "S106",  # Don't sniff for secrets
+	"S311",  # Random is OK
+	"S308",  # Mark safe is OK
+	"S610",  # Django "extra" is OK
+	"E731", "B023",  # Lambda & unbound lambda is OK
+	"B024",  # Allow ABCs without abstract methods
+	"BLE001",  # Allow catching bare exception explicitly
+	"FIX002", "TD003",  # Allow fully-formed TODOs
+	"G", "EM", "TRY",  # Log formatting
+
+	# amp-renderer-specific opt-outs
+	"ANN",  # No type annotations yet
+	"D1",  # Extensive docstring requirements
+	"C", "PLR09",  # Complexity rules
+	"PLR2004",  # Magic values
+	"CPY",  # Copyright text
+]
+
+[lint.pycodestyle]
+max-doc-length = 79
+
+[lint.isort]
+combine-as-imports = true
+detect-same-package = true
+section-order = [
+	"future",
+	"standard-library",
+	"third-party",
+	"django",
+	"first-party",
+	"local-folder",
+]
+order-by-type = true
+
+[lint.per-file-ignores]
+"tests/*" = ["S101"]
