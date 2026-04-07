@@ -2,6 +2,8 @@
 *.pyc
 *.pyo
 /.pytest_cache/
+/.ruff_cache/
+/.cache/
 /.coverage
 /amp_renderer.egg-info
 /build/

@@ -8,7 +8,7 @@ output-format = "grouped"
 quote-style = "double"
 
 [lint]
-allowed-confusables = ["'", "\u2019", "\u00d7", "\u2013"]
+allowed-confusables = ["'", "’", "×", "–", "‘"]
 select = ["ALL"]
 ignore = [
 	# General configuration (see https://www.chasefinch.com/nitpick-style.toml)
