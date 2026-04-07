@@ -1,7 +1,6 @@
 """Test the performance of AMP renderer with very large data sets."""
 
 # Standard Library
-import codecs
 import os
 
 # AMP Renderer
@@ -24,9 +23,9 @@ class TestSpeed:
     def test_speed(self):
         """Run the speed test."""
         local_path = os.path.dirname(__file__)
-        input_path = "{}/speed/input.html".format(local_path)
+        input_path = f"{local_path}/speed/input.html"
 
-        with codecs.open(input_path, "r", encoding="utf-8") as html_file:
+        with open(input_path, encoding="utf-8") as html_file:
             html = html_file.read()
 
         renderer = AMPRenderer(

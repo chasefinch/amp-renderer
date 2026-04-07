@@ -1,7 +1,6 @@
 """Test against the spec files from AMP Optimizer."""
 
 # Standard Library
-import codecs
 import os
 import re
 from html.parser import HTMLParser
@@ -31,7 +30,7 @@ class OutputNormalizer(HTMLParser):
 
     def handle_decl(self, decl):
         """Handle an HTML declaration."""
-        self._result = "{}<!{}>".format(self._result, decl.lower())
+        self._result = f"{self._result}<!{decl.lower()}>"
 
     def handle_starttag(self, tag, attrs):
         """Process an opening tag."""
@@ -42,22 +41,22 @@ class OutputNormalizer(HTMLParser):
             if attr[1] is not None:
                 value = str(attr[1])
                 value = value.replace('"', "&quot;")
-                attr_strings.append(' {}="{}"'.format(attr[0].lower(), value))
+                attr_strings.append(f' {attr[0].lower()}="{value}"')
             else:
-                attr_strings.append(" {}".format(attr[0].lower()))
+                attr_strings.append(f" {attr[0].lower()}")
 
         # Sort alphabetically for diffing
         attr_strings.sort()
 
         attr_string = "".join(attr_strings)
 
-        self._result = "{}<{}{}>".format(self._result, tag, attr_string)
+        self._result = f"{self._result}<{tag}{attr_string}>"
 
     def handle_endtag(self, tag):
         """Process a closing tag."""
         tag = tag.lower()
 
-        self._result = "{}</{}>".format(self._result, tag)
+        self._result = f"{self._result}</{tag}>"
 
     def handle_data(self, html_data):
         """Process HTML data."""
@@ -65,15 +64,15 @@ class OutputNormalizer(HTMLParser):
 
     def handle_entityref(self, name):
         """Process an HTML entity."""
-        self._add_data("&{};".format(name))
+        self._add_data(f"&{name};")
 
     def handle_charref(self, name):
         """Process a numbered HTML entity."""
-        self._add_data("&#{};".format(name))
+        self._add_data(f"&#{name};")
 
     def handle_comment(self, comment):
         """Process an HTML comment."""
-        self._result = "{}<!--{}-->".format(self._result, comment)
+        self._result = f"{self._result}<!--{comment}-->"
 
     def render(self, amp_html):
         """Run the normalization routine."""
@@ -85,7 +84,7 @@ class OutputNormalizer(HTMLParser):
 
     def _add_data(self, html_data):
         """Append some more data to the result."""
-        self._result = "{}{}".format(self._result, html_data)
+        self._result = f"{self._result}{html_data}"
 
 
 class TestSpec:
@@ -149,13 +148,13 @@ class TestSpec:
 
     def _run_test(self, spec):
         local_path = os.path.dirname(__file__)
-        input_path = "{}/spec/{}/input.html".format(local_path, spec)
-        output_path = "{}/spec/{}/expected_output.html".format(local_path, spec)
+        input_path = f"{local_path}/spec/{spec}/input.html"
+        output_path = f"{local_path}/spec/{spec}/expected_output.html"
 
-        with codecs.open(input_path, "r", encoding="utf-8") as html_file:
+        with open(input_path, encoding="utf-8") as html_file:
             html = html_file.read()
 
-        with codecs.open(output_path, "r", encoding="utf-8") as html_file:
+        with open(output_path, encoding="utf-8") as html_file:
             expected_output = html_file.read()
 
         normalizer = OutputNormalizer()

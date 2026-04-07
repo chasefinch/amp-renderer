@@ -10,7 +10,7 @@ class TestLayout:
     def test_get_class(self):
         """Test the get_class method."""
         for layout in list(Layout):
-            assert layout.get_class() == "i-amphtml-layout-{}".format(layout.value)
+            assert layout.get_class() == f"i-amphtml-layout-{layout.value}"
 
     def test_is_size_defined(self):
         """Test the is_size_defined method."""

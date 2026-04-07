@@ -52,5 +52,8 @@ section-order = [
 ]
 order-by-type = true
 
+[lint.isort.sections]
+django = []
+
 [lint.per-file-ignores]
 "tests/*" = ["S101"]

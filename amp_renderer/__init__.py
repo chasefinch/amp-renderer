@@ -406,9 +406,9 @@ class AMPNode:
         self._other_attrs["i-amphtml-layout"] = layout.value
 
         # Create sizer if necessary
-        create_sizer = all(
-            isinstance(length, CSSLength) for length in (width, height)
-        ) and all([width[0] != 0, width[1] == height[1]])
+        create_sizer = all(isinstance(length, CSSLength) for length in (width, height)) and all(
+            [width[0] != 0, width[1] == height[1]],
+        )
         if create_sizer:
             if layout == LAYOUT_RESPONSIVE:
                 padding = (height[0] / width[0]) * 100
@@ -418,7 +418,7 @@ class AMPNode:
             elif layout == LAYOUT_INTRINSIC:
                 svg_string = (
                     '<svg height="{}" width="{}" xmlns="http://www.w3.org/2000/svg"'
-                    + ' version="1.1"/>'
+                    ' version="1.1"/>'
                 )
                 svg_string = svg_string.format(height[0], width[0])
 
@@ -461,8 +461,8 @@ class AMPNode:
     def _parse_length(self, length):
         """Parse a valid length value.
 
-        Returns a CSSLength, or an alternative constant (CSS_LENGTH_AUTO),
-        or None; All are valid results.
+        Returns a CSSLength, or an alternative constant (CSS_LENGTH_AUTO), or
+        None; All are valid results.
 
         Throws a TransformationError if a valid result can't be parsed.
 
@@ -504,13 +504,15 @@ class AMPRenderer(HTMLParser):
     def __init__(self, runtime_styles, runtime_version, *args, **kwargs):
         """Initialize AMPRenderer with runtime styles & version.
 
-        Parameters:
+        Parameters
+        ----------
             runtime_styles (string): The current contents of
                                      https://cdn.ampproject.org/v0.css
 
             runtime_version (string): The version number for the runtime
                                       styles as a string with leading zeros,
                                       e.g. '012007302351001'
+
         """
         super().__init__(*args, **kwargs)
 
@@ -738,7 +740,7 @@ class AMPRenderer(HTMLParser):
             else:
                 style = (
                     "<style amp-runtime"
-                    + f' i-amphtml-version="{self.runtime_version}">{self.runtime_styles}</style>'
+                    f' i-amphtml-version="{self.runtime_version}">{self.runtime_styles}</style>'
                 )
             self._result.append(style)
 
@@ -831,7 +833,7 @@ class AMPRenderer(HTMLParser):
 
         self._auto_id_nums_to_ignore = []
 
-        conflict_ids = re.findall("id=['\"]?{}([0-9]+)['\"]?".format(ID_PREFIX), amp_html)
+        conflict_ids = re.findall(f"id=['\"]?{ID_PREFIX}([0-9]+)['\"]?", amp_html)
         for conflict_id in conflict_ids:
             self._auto_id_nums_to_ignore.append(int(conflict_id))
 
