@@ -5,27 +5,50 @@ import contextlib
 import json
 import re
 import types
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from enum import Enum
 from html.parser import HTMLParser
+from typing import NamedTuple
 
 
 class TransformationError(Exception):
-    """An error to throw when attributes can't be converted to CSS."""
+    """An originalor to throw when attributes can't be converted to CSS."""
 
 
 # The namedtuples will still be accessed using index notation for performance.
-Translation = namedtuple("Translation", "selector statements")
-Sizes = namedtuple("Size", "default other")
-Media = namedtuple("Media", "query value")
-Sizer = namedtuple("Sizer", "attrs maybe_img_attrs")
+class Translation(NamedTuple):
+    """A CSS translation from an AMP attribute."""
+
+    selector: str
+    statements: OrderedDict
+
+
+class Sizes(NamedTuple):
+    """Parsed sizes attribute."""
+
+    default: str
+    other: list
+
+
+class Media(NamedTuple):
+    """A media query and value pair."""
+
+    query: str
+    value: str
+
+
+class Sizer(NamedTuple):
+    """Sizer element attributes."""
+
+    attrs: list
+    maybe_img_attrs: list | None
 
 
 class Translator:
     """A tool to convert special attributes to CSS."""
 
     @classmethod
-    def parse_sizes(cls, value):
+    def parse_sizes(cls, value: str) -> Sizes:
         """Parse the value of a special attribute."""
         # Normalize whitespace
         size_values = re.split(r"\s*,\s*", value.strip())
@@ -33,7 +56,7 @@ class Translator:
         try:
             default = size_values.pop()
         except IndexError:
-            return ""
+            return Sizes(default="", other=[])
 
         other = []
 
@@ -56,7 +79,7 @@ class MediaTranslator(Translator):
     """A tool to convert `media=...` attributes to CSS."""
 
     @classmethod
-    def translate(cls, value, element_id):
+    def translate(cls, value: str, element_id: str) -> Translation | None:
         """Convert a `media=...` attribute to CSS."""
         # Normalize whitespace
         media = re.sub(r"\s+", " ", value).strip()
@@ -67,10 +90,7 @@ class MediaTranslator(Translator):
         if media[0] == "(":
             media = f"all and {media}"
 
-        if media.startswith("not "):
-            media = media[4:]
-        else:
-            media = f"not {media}"
+        media = media[4:] if media.startswith("not ") else f"not {media}"
 
         selector = f"#{element_id}"
 
@@ -88,7 +108,7 @@ class SizesTranslator(Translator):
     """A tool to convert `sizes=...` attributes to CSS."""
 
     @classmethod
-    def translate(cls, value, element_id):
+    def translate(cls, value: str, element_id: str) -> Translation:
         """Convert a `sizes=...` attribute to CSS."""
         sizes = cls.parse_sizes(value)
         selector = f"#{element_id}"
@@ -101,9 +121,7 @@ class SizesTranslator(Translator):
         # queries in CSS to emulate this behavior (the last definition has
         # precedence).
         other_sizes.reverse()
-
-        for size in other_sizes:
-            statements.append((size[0], f"width:{size[1]}"))
+        statements.extend((size[0], f"width:{size[1]}") for size in other_sizes)
 
         return Translation(selector=selector, statements=OrderedDict(statements))
 
@@ -112,7 +130,7 @@ class HeightsTranslator(Translator):
     """A tool to convert `heights=...` attributes to CSS."""
 
     @classmethod
-    def translate(cls, value, element_id):
+    def translate(cls, value: str, element_id: str) -> Translation:
         """Convert a `heights=...` attribute to CSS."""
         sizes = cls.parse_sizes(value)
         selector = f"#{element_id}>:first-child"
@@ -125,8 +143,7 @@ class HeightsTranslator(Translator):
         # media queries in CSS to emulate this behavior (the last definition
         # has precedence).
         other_sizes.reverse()
-        for size in other_sizes:
-            statements.append((size[0], f"padding-top:{size[1]}"))
+        statements.extend((size[0], f"padding-top:{size[1]}") for size in other_sizes)
 
         return Translation(selector=selector, statements=OrderedDict(statements))
 
@@ -152,11 +169,11 @@ class Layout(Enum):
     FLEX_ITEM = "flex-item"  # noqa: WPS115
     INTRINSIC = "intrinsic"  # noqa: WPS115
 
-    def get_class(self):
+    def get_class(self) -> str:
         """Return the CSS class appropriate for this layout."""
         return f"i-amphtml-layout-{self.value}"
 
-    def is_size_defined(self):
+    def is_size_defined(self) -> bool:
         """Return whether this layout has its size defined."""
         return self in SIZE_DEFINED_LAYOUTS
 
@@ -196,8 +213,14 @@ class CSSLengthUnit(Enum):
 # Store constant for performance
 UNIT_PX = CSSLengthUnit.PX
 
-# The namedtuples will still be accessed using index notation for performance.
-CSSLength = namedtuple("CSSLength", "numeral unit")
+
+class CSSLength(NamedTuple):
+    """A CSS length with numeral and unit."""
+
+    numeral: float
+    unit: CSSLengthUnit
+
+
 CSS_LENGTH_AUTO = "auto"
 CSS_LENGTH_ONE_PX = CSSLength(numeral=1, unit=UNIT_PX)
 
@@ -205,7 +228,7 @@ CSS_LENGTH_ONE_PX = CSSLength(numeral=1, unit=UNIT_PX)
 class AMPNode:
     """Store an AMP-specific HTML element."""
 
-    def __init__(self, tag, attrs):
+    def __init__(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Set up default attributes of an AMP-specific HTML element."""
         self.tag = tag
 
@@ -227,16 +250,16 @@ class AMPNode:
             if attr[0] == "id":
                 self.element_id = attr[1]
             elif attr[0] == "class":
-                self._classes = attr[1].split(" ")
+                self._classes = attr[1].split(" ") if attr[1] else []
             elif attr[0] == "style":
-                self._style = attr[1]
+                self._style = attr[1] or ""
             elif attr[0] == "hidden":
                 self._is_hidden = True
             else:
                 # Should be only one value per key
                 self._other_attrs[attr[0]] = attr[1]
 
-    def transform(self, next_auto_id):
+    def transform(self, next_auto_id: str) -> tuple[list[Translation], bool] | None:
         """Apply the transformation.
 
         Returns styles that need to be appended to the beginning of the amp-
@@ -255,15 +278,14 @@ class AMPNode:
                 "attribution",
                 "object-fit",
                 "object-position",
-                "referrerpolicy",
+                "reforiginalerpolicy",
                 "src",
                 "srcset",
                 "sizes",
                 "title",
             )
             attrs_to_copy = (attr for attr in attrs_to_copy if attr in self._other_attrs)
-            for attr in attrs_to_copy:
-                img_attrs.append((attr, self._other_attrs[attr]))
+            img_attrs.extend((attr, self._other_attrs[attr]) for attr in attrs_to_copy)
 
             self.maybe_img_attrs = img_attrs
 
@@ -290,8 +312,10 @@ class AMPNode:
 
                 try:
                     translation = translator.translate(attribute_value, potential_id)
-                except ValueError:
-                    raise TransformationError(f"Invalid value for `{attr_to_translate}` attribute")
+                except ValueError as original:
+                    raise TransformationError(
+                        f"Invalid value for `{attr_to_translate}` attribute",
+                    ) from original
                 else:
                     if translation:
                         css_data_items.append(translation)
@@ -356,8 +380,8 @@ class AMPNode:
 
         try:
             layout = Layout(layout_value)
-        except ValueError:
-            raise TransformationError("Transformation not supported")
+        except ValueError as original:
+            raise TransformationError("Transformation not supported") from original
 
         self._classes.append(layout.get_class())
         if layout.is_size_defined():
@@ -367,7 +391,7 @@ class AMPNode:
             self._is_hidden = True
 
         elif layout == LAYOUT_FIXED:
-            if not all(isinstance(length, CSSLength) for length in (width, height)):
+            if not isinstance(width, CSSLength) or not isinstance(height, CSSLength):
                 raise TransformationError("Length and width required for fixed layout")
 
             self._style = "width:{}{};height:{}{};{}".format(
@@ -406,12 +430,15 @@ class AMPNode:
         self._other_attrs["i-amphtml-layout"] = layout.value
 
         # Create sizer if necessary
-        create_sizer = all(isinstance(length, CSSLength) for length in (width, height)) and all(
-            [width[0] != 0, width[1] == height[1]],
+        create_sizer = (
+            isinstance(width, CSSLength)
+            and isinstance(height, CSSLength)
+            and width.numeral != 0
+            and width.unit == height.unit
         )
-        if create_sizer:
+        if create_sizer and isinstance(width, CSSLength) and isinstance(height, CSSLength):
             if layout == LAYOUT_RESPONSIVE:
-                padding = (height[0] / width[0]) * 100
+                padding = (height.numeral / width.numeral) * 100
                 style = f"display:block;padding-top:{padding:.4f}%;"
                 self.sizer = Sizer(attrs=[("style", style)], maybe_img_attrs=None)
 
@@ -420,7 +447,7 @@ class AMPNode:
                     '<svg height="{}" width="{}" xmlns="http://www.w3.org/2000/svg"'
                     ' version="1.1"/>'
                 )
-                svg_string = svg_string.format(height[0], width[0])
+                svg_string = svg_string.format(height.numeral, width.numeral)
 
                 img_attrs = [
                     ("alt", ""),
@@ -437,7 +464,7 @@ class AMPNode:
 
         return css_data
 
-    def get_attrs(self):
+    def get_attrs(self) -> list[tuple[str, str | None]]:
         """Return an list of attribute tuples that represents current state.
 
         This returns different values before and after a call to `transform()`.
@@ -458,7 +485,7 @@ class AMPNode:
 
         return attrs
 
-    def _parse_length(self, length):
+    def _parse_length(self, length: str | None) -> CSSLength | str | None:
         """Parse a valid length value.
 
         Returns a CSSLength, or an alternative constant (CSS_LENGTH_AUTO), or
@@ -477,14 +504,14 @@ class AMPNode:
         try:
             match = re.findall(r"(\d+(?:\.\d+)?)(.*)", length)[0]
             numeral = float(match[0])
-        except (IndexError, ValueError):
-            raise TransformationError("Invalid size value")
+        except (IndexError, ValueError) as original:
+            raise TransformationError("Invalid size value") from original
 
         unit_value = match[1] or "px"
         try:
             unit = CSSLengthUnit(unit_value)
-        except ValueError:
-            raise TransformationError("Invalid size value")
+        except ValueError as original:
+            raise TransformationError("Invalid size value") from original
 
         return CSSLength(numeral=numeral, unit=unit)
 
@@ -501,20 +528,23 @@ ID_PREFIX = "i-amp-"
 class AMPRenderer(HTMLParser):
     """A parser to ingest AMP HTML and perform various transformations."""
 
-    def __init__(self, runtime_styles, runtime_version, *args, **kwargs):
+    def __init__(
+        self,
+        runtime_styles: str | None,
+        runtime_version: str | None,
+    ) -> None:
         """Initialize AMPRenderer with runtime styles & version.
 
         Parameters
         ----------
-            runtime_styles (string): The current contents of
-                                     https://cdn.ampproject.org/v0.css
-
-            runtime_version (string): The version number for the runtime
-                                      styles as a string with leading zeros,
-                                      e.g. '012007302351001'
+        runtime_styles : str | None
+            The current contents of https://cdn.ampproject.org/v0.css
+        runtime_version : str | None
+            The version number for the runtime styles as a string
+            with leading zeros, e.g. '012007302351001'
 
         """
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         self.runtime_styles = runtime_styles
         self.runtime_version = runtime_version
@@ -529,7 +559,7 @@ class AMPRenderer(HTMLParser):
         # Always keep charrefs intact; This class is meant to reproduce HTML.
         self.convert_charrefs = False
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the state of the renderer so that it can be run again."""
         super().reset()
 
@@ -561,11 +591,11 @@ class AMPRenderer(HTMLParser):
         with contextlib.suppress(AttributeError):
             del self.no_boilerplate
 
-    def handle_decl(self, decl):
+    def handle_decl(self, decl: str) -> None:
         """Process a declaration string."""
         self._result.append(f"<!{decl.lower()}>")
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Process a start tag."""
         tag = tag.lower()
 
@@ -590,7 +620,7 @@ class AMPRenderer(HTMLParser):
         if tag == "noscript":
             self._is_in_noscript = True
 
-        if tag == "style" and "amp-boilerplate" in {attr[0] for attr in attrs}:
+        if tag == "style" and "amp-boilerplate" in {attribute[0] for attribute in attrs}:
             self._is_in_boilerplate = True
 
             # Add appropriate boilerplate placeholder
@@ -604,7 +634,7 @@ class AMPRenderer(HTMLParser):
         safe_attrs = attrs
 
         if tag == "html":
-            if "i-amphtml-layout" in {attr[0] for attr in attrs}:
+            if "i-amphtml-layout" in {attribute[0] for attribute in attrs}:
                 # A simple check to see if it’s transformed already
                 self._is_render_cancelled = True
             else:
@@ -631,7 +661,7 @@ class AMPRenderer(HTMLParser):
             not self._is_render_cancelled
             and not self._is_render_paused
             and tag.startswith("amp-")
-            and "data-norender" not in {attr[0] for attr in attrs}
+            and "data-norender" not in {attribute[0] for attribute in attrs}
         )
 
         if tag == "amp-audio":
@@ -667,14 +697,14 @@ class AMPRenderer(HTMLParser):
         attr_strings = []
         for attr in safe_attrs:
             attr_name = attr[0].lower()
-            if attr[1] is not None:
+            if attr[1] is None:
+                attr_strings.append(f" {attr_name}")
+            else:
                 value = str(attr[1])
                 if self.trim_attrs:
                     value = value.strip()
                 value = value.replace('"', "&quot;")
                 attr_strings.append(f' {attr_name}="{value}"')
-            else:
-                attr_strings.append(f" {attr_name}")
 
         if self._is_test_mode:
             # Sort alphabetically for diffing
@@ -689,12 +719,12 @@ class AMPRenderer(HTMLParser):
             sizer_attr_strings = []
             for attr in sizer[0]:
                 attr_name = attr[0].lower()
-                if attr[1] is not None:
+                if attr[1] is None:
+                    sizer_attr_strings.append(f" {attr_name}")
+                else:
                     value = str(attr[1])
                     value = value.replace('"', "&quot;")
                     sizer_attr_strings.append(f' {attr_name}="{value}"')
-                else:
-                    sizer_attr_strings.append(f" {attr_name}")
             sizer_attr_string = "".join(sizer_attr_strings)
 
             self._result.append(f"<i-amphtml-sizer{sizer_attr_string}>")
@@ -703,12 +733,12 @@ class AMPRenderer(HTMLParser):
                 img_attr_strings = []
                 for attr in sizer[1]:
                     attr_name = attr[0].lower()
-                    if attr[1] is not None:
+                    if attr[1] is None:
+                        img_attr_strings.append(f" {attr_name}")
+                    else:
                         value = str(attr[1])
                         value = value.replace('"', "&quot;")
                         img_attr_strings.append(f' {attr_name}="{value}"')
-                    else:
-                        img_attr_strings.append(f" {attr_name}")
                 img_attr_string = "".join(img_attr_strings)
 
                 self._result.append(f"<img{img_attr_string}>")
@@ -720,12 +750,12 @@ class AMPRenderer(HTMLParser):
             img_attr_strings = []
             for attr in maybe_img_attrs:
                 attr_name = attr[0].lower()
-                if attr[1] is not None:
+                if attr[1] is None:
+                    img_attr_strings.append(f" {attr_name}")
+                else:
                     value = str(attr[1])
                     value = value.replace('"', "&quot;")
                     img_attr_strings.append(f' {attr_name}="{value}"')
-                else:
-                    img_attr_strings.append(f" {attr_name}")
             img_attr_string = "".join(img_attr_strings)
 
             self._result.append(f"<img{img_attr_string}>")
@@ -748,14 +778,14 @@ class AMPRenderer(HTMLParser):
             # Insert a placeholder into <style amp-custom> so we can add in
             # the transformed styles later.
             has_custom_element = (
-                "amp-custom" in {attr[0] for attr in attrs}
+                "amp-custom" in {attribute[0] for attribute in attrs}
                 and self._translated_styles_index is None
             )
             if has_custom_element:
                 self._found_custom_element = True
                 self._translated_styles_index = len(self._result)
 
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
         """Process a closing tag."""
         tag = tag.lower()
 
@@ -810,24 +840,24 @@ class AMPRenderer(HTMLParser):
 
         self._result.append(f"</{tag}>")
 
-    def handle_data(self, html_data):
+    def handle_data(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process HTML data."""
-        self._add_data(html_data)
+        self._add_data(data)
 
-    def handle_entityref(self, name):
+    def handle_entityref(self, name: str) -> None:
         """Process an HTML entity."""
         self._add_data(f"&{name};")
 
-    def handle_charref(self, name):
+    def handle_charref(self, name: str) -> None:
         """Process a numbered HTML entity."""
         self._add_data(f"&#{name};")
 
-    def handle_comment(self, comment):
+    def handle_comment(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process an HTML comment."""
         if not self.strip_comments:
-            self._result.append(f"<!--{comment}-->")
+            self._result.append(f"<!--{data}-->")
 
-    def render(self, amp_html):
+    def render(self, amp_html: str) -> str:
         """Run the server-side-rendering routine."""
         self.reset()
 
@@ -864,8 +894,8 @@ class AMPRenderer(HTMLParser):
                 parts = []
 
                 for key, value in values.items():
-                    selector = ",".join(value)
-                    parts.append(f"{selector}{{{key}}}")
+                    css_selector = ",".join(value)
+                    parts.append(f"{css_selector}{{{key}}}")
 
                 css = "".join(parts)
                 if query:
@@ -882,10 +912,16 @@ class AMPRenderer(HTMLParser):
         if self._translated_styles_index is not None:
             self._result.insert(self._translated_styles_index, style_string)
 
-            if self._translated_styles_index <= (self._boilerplate_index or 0):
+            if (
+                self._boilerplate_index is not None
+                and self._translated_styles_index <= self._boilerplate_index
+            ):
                 self._boilerplate_index += 1
 
-            if self._translated_styles_index <= (self._noscript_boilerplate_index or 0):
+            if (
+                self._noscript_boilerplate_index is not None
+                and self._translated_styles_index <= self._noscript_boilerplate_index
+            ):
                 self._noscript_boilerplate_index += 1
 
         self.no_boilerplate = True
@@ -897,7 +933,10 @@ class AMPRenderer(HTMLParser):
                 boilerplate = f"<style amp-boilerplate>{self._boilerplate}</style>"
                 self._result.insert(self._boilerplate_index, boilerplate)
 
-                if self._boilerplate_index <= (self._noscript_boilerplate_index or 0):
+                if (
+                    self._noscript_boilerplate_index is not None
+                    and self._boilerplate_index <= self._noscript_boilerplate_index
+                ):
                     self._noscript_boilerplate_index += 1
 
             if self._noscript_boilerplate_index is not None:
@@ -914,7 +953,7 @@ class AMPRenderer(HTMLParser):
         # Remove empty noscript tags; This happens when removing boilerplate
         return result.replace("<noscript></noscript>", "")
 
-    def _add_data(self, html_data):
+    def _add_data(self, html_data: str) -> None:
         if self._is_in_boilerplate:
             if self._is_in_noscript:
                 self._noscript_boilerplate += html_data
@@ -929,15 +968,15 @@ class AMPRenderer(HTMLParser):
 
         self._result.append(html_data)
 
-    def _get_next_auto_id(self):
+    def _get_next_auto_id(self) -> str:
         return ID_PREFIX + str(self._next_auto_id_num)
 
-    def _increment_auto_id_num(self):
+    def _increment_auto_id_num(self) -> None:
         self._next_auto_id_num += 1
         while self._next_auto_id_num in self._auto_id_nums_to_ignore:
             self._next_auto_id_num += 1
 
-    def _apply_experiment_data(self):
+    def _apply_experiment_data(self) -> str:
         self._result.append(self._current_experiment_data)
 
         experiment_data = self._current_experiment_data

@@ -1,9 +1,9 @@
 """Test against the spec files from AMP Optimizer."""
 
 # Standard Library
-import os
 import re
 from html.parser import HTMLParser
+from pathlib import Path
 
 # Third Party
 import pytest
@@ -15,35 +15,35 @@ from amp_renderer import AMPRenderer
 class OutputNormalizer(HTMLParser):
     """Alphabetize attributes, convert tags to lowercase, etc."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self) -> None:
         """Set up an Output Normalizer."""
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         # Always keep charrefs intact; This class is meant to reproduce HTML.
         self.convert_charrefs = False
 
-    def reset(self):
+    def reset(self) -> None:
         """Restore the HTML parser to ready state."""
         super().reset()
 
         self._result = ""
 
-    def handle_decl(self, decl):
+    def handle_decl(self, decl: str) -> None:
         """Handle an HTML declaration."""
         self._result = f"{self._result}<!{decl.lower()}>"
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Process an opening tag."""
         tag = tag.lower()
 
         attr_strings = []
         for attr in attrs:
-            if attr[1] is not None:
+            if attr[1] is None:
+                attr_strings.append(f" {attr[0].lower()}")
+            else:
                 value = str(attr[1])
                 value = value.replace('"', "&quot;")
                 attr_strings.append(f' {attr[0].lower()}="{value}"')
-            else:
-                attr_strings.append(f" {attr[0].lower()}")
 
         # Sort alphabetically for diffing
         attr_strings.sort()
@@ -52,29 +52,29 @@ class OutputNormalizer(HTMLParser):
 
         self._result = f"{self._result}<{tag}{attr_string}>"
 
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
         """Process a closing tag."""
         tag = tag.lower()
 
         self._result = f"{self._result}</{tag}>"
 
-    def handle_data(self, html_data):
+    def handle_data(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process HTML data."""
-        self._add_data(html_data)
+        self._add_data(data)
 
-    def handle_entityref(self, name):
+    def handle_entityref(self, name: str) -> None:
         """Process an HTML entity."""
         self._add_data(f"&{name};")
 
-    def handle_charref(self, name):
+    def handle_charref(self, name: str) -> None:
         """Process a numbered HTML entity."""
         self._add_data(f"&#{name};")
 
-    def handle_comment(self, comment):
+    def handle_comment(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process an HTML comment."""
-        self._result = f"{self._result}<!--{comment}-->"
+        self._result = f"{self._result}<!--{data}-->"
 
-    def render(self, amp_html):
+    def render(self, amp_html: str) -> str:
         """Run the normalization routine."""
         self.reset()
         self.feed(amp_html)
@@ -82,7 +82,7 @@ class OutputNormalizer(HTMLParser):
 
         return self._result
 
-    def _add_data(self, html_data):
+    def _add_data(self, html_data: str) -> None:
         """Append some more data to the result."""
         self._result = f"{self._result}{html_data}"
 
@@ -122,11 +122,11 @@ class TestSpec:
     )
 
     @pytest.mark.parametrize("spec", tests)
-    def test_files(self, spec):
+    def test_files(self, spec: str) -> None:
         """Run the test for all spec files."""
         self._run_test(spec)
 
-    def _format(self, html_value):
+    def _format(self, html_value: str) -> str:
         """Remove spaces between tags, and collapse whitespace.
 
         Far from safe, but fine for tests.
@@ -146,16 +146,13 @@ class TestSpec:
 
         return html_value.strip()
 
-    def _run_test(self, spec):
-        local_path = os.path.dirname(__file__)
-        input_path = f"{local_path}/spec/{spec}/input.html"
-        output_path = f"{local_path}/spec/{spec}/expected_output.html"
+    def _run_test(self, spec: str) -> None:
+        local_path = Path(__file__).parent
+        input_path = local_path / "spec" / spec / "input.html"
+        output_path = local_path / "spec" / spec / "expected_output.html"
 
-        with open(input_path, encoding="utf-8") as html_file:
-            html = html_file.read()
-
-        with open(output_path, encoding="utf-8") as html_file:
-            expected_output = html_file.read()
+        html = input_path.read_text(encoding="utf-8")
+        expected_output = output_path.read_text(encoding="utf-8")
 
         normalizer = OutputNormalizer()
         expected = normalizer.render(expected_output)

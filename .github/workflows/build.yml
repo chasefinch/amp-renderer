@@ -102,6 +102,11 @@ jobs:
                   . .venv/bin/activate
                   make lint
 
+            - name: Check
+              run: |
+                  . .venv/bin/activate
+                  make check
+
     test:
         name: "Test (Python ${{ matrix.python-version }})"
         runs-on: ubuntu-latest

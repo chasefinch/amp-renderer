@@ -29,8 +29,6 @@ ignore = [
 	"G", "EM", "TRY",  # Log formatting
 
 	# amp-renderer-specific opt-outs
-	"ANN",  # No type annotations yet
-	"D1",  # Extensive docstring requirements
 	"C", "PLR09",  # Complexity rules
 	"PLR2004",  # Magic values
 	"CPY",  # Copyright text

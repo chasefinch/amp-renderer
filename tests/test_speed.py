@@ -1,7 +1,7 @@
 """Test the performance of AMP renderer with very large data sets."""
 
 # Standard Library
-import os
+from pathlib import Path
 
 # AMP Renderer
 from amp_renderer import AMPRenderer
@@ -20,13 +20,10 @@ class TestSpeed:
     HTML file; The test can then be profiled with pytest.
     """
 
-    def test_speed(self):
+    def test_speed(self) -> None:
         """Run the speed test."""
-        local_path = os.path.dirname(__file__)
-        input_path = f"{local_path}/speed/input.html"
-
-        with open(input_path, encoding="utf-8") as html_file:
-            html = html_file.read()
+        input_path = Path(__file__).parent / "speed" / "input.html"
+        html = input_path.read_text(encoding="utf-8")
 
         renderer = AMPRenderer(
             runtime_version=AMP_RUNTIME_VERSION,

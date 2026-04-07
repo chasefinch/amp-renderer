@@ -1,14 +1,16 @@
 """Define metadata for AMP Renderer."""
 
+# Standard Library
+from pathlib import Path
+
 # Third Party
 import setuptools
 
-with open("README.md") as readme_file:
-    long_description = readme_file.read()
+long_description = Path("README.md").read_text(encoding="utf-8")
 
 setuptools.setup(
     name="amp-renderer",
-    version="2.1.0",
+    version="2.2.0",
     author="Chase Finch",
     author_email="chase@finch.email",
     description="Unofficial Python port of server-side rendering from AMP Optimizer",

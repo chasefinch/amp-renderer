@@ -2,4 +2,4 @@
 all = "error"
 
 [src]
-exclude = ["build", "dist", "bin", "lib", "prof"]
+exclude = ["build", "dist", "bin", "lib", "prof", "setup.py"]

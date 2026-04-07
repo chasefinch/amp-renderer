@@ -1,7 +1,7 @@
 VENV_DIR := .venv
 UV := $(shell command -v uv 2>/dev/null || echo $(HOME)/.local/bin/uv)
 
-default: sync configure format lint test
+default: sync configure format lint check test
 
 clean:
 	find . -name "*.pyc" -delete
@@ -61,6 +61,8 @@ check-py:
 	@ty check .
 	@echo "...done. No issues found."
 
+check: check-py
+
 test:
 	find . -name "*.pyc" -delete
 	coverage erase
@@ -81,4 +83,4 @@ setup:
 	@echo
 
 .PHONY: default clean sync sync-spec configure configure-spec \
-        format format-py lint lint-py check-py test install setup
+        format format-py lint lint-py check check-py test install setup
