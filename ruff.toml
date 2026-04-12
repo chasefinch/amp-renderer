@@ -44,14 +44,13 @@ section-order = [
 	"future",
 	"standard-library",
 	"third-party",
-	"django",
 	"first-party",
 	"local-folder",
 ]
 order-by-type = true
 
-[lint.isort.sections]
-django = []
-
 [lint.per-file-ignores]
 "tests/*" = ["S101"]
+
+[lint.pep8-naming]
+classmethod-decorators = ["classmethod"]
