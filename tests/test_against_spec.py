@@ -1,14 +1,11 @@
 """Test against the spec files from AMP Optimizer."""
 
-# Standard Library
 import re
 from html.parser import HTMLParser
 from pathlib import Path
 
-# Third Party
 import pytest
 
-# AMP Renderer
 from amp_renderer import AMPRenderer
 
 

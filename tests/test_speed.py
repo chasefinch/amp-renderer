@@ -1,9 +1,7 @@
 """Test the performance of AMP renderer with very large data sets."""
 
-# Standard Library
 from pathlib import Path
 
-# AMP Renderer
 from amp_renderer import AMPRenderer
 
 # Current AMP runtime style

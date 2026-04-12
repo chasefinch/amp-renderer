@@ -1,6 +1,5 @@
 """Tests for AMPRenderer and related functionality."""
 
-# AMP Renderer
 from amp_renderer import AMPRenderer
 
 RUNTIME_VERSION = "01234"

@@ -1,9 +1,7 @@
 """Define metadata for AMP Renderer."""
 
-# Standard Library
 from pathlib import Path
 
-# Third Party
 import setuptools
 
 long_description = Path("README.md").read_text(encoding="utf-8")

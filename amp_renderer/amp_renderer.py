@@ -1,6 +1,5 @@
 """Server-side rendering for AMP HTML in Python."""
 
-# Standard Library
 import contextlib
 import json
 import re

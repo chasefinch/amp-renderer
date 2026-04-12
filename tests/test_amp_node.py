@@ -1,6 +1,5 @@
 """Tests for AMPNode and related functionality."""
 
-# AMP Renderer
 from amp_renderer import AMPNode, Layout
 
 
