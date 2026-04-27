@@ -5,6 +5,7 @@ import json
 import re
 import types
 from collections import OrderedDict
+from collections.abc import Sequence
 from enum import Enum
 from html.parser import HTMLParser
 from typing import NamedTuple
@@ -227,7 +228,7 @@ CSS_LENGTH_ONE_PX = CSSLength(numeral=1, unit=UNIT_PX)
 class AMPNode:
     """Store an AMP-specific HTML element."""
 
-    def __init__(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+    def __init__(self, tag: str, attrs: Sequence[tuple[str, str | None]]) -> None:
         """Set up default attributes of an AMP-specific HTML element."""
         self.tag = tag
 
