@@ -3,6 +3,6 @@
 nitpick==0.38.1
 ruff==0.15.11
 add-trailing-comma==4.0.0
-docformatter==1.7.7
+docformatter==1.7.8
 wemake-python-styleguide==1.6.1
 ty==0.0.32
