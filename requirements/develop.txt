@@ -5,4 +5,4 @@ ruff==0.15.12
 add-trailing-comma==4.0.0
 docformatter==1.7.8
 wemake-python-styleguide==1.6.2
-ty==0.0.34
+ty==0.0.35
