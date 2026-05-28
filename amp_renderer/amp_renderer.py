@@ -268,7 +268,7 @@ class AMPNode:
         # Create img if necessary
         if self.tag == "amp-img" and "data-hero" in self._other_attrs:
             self._other_attrs["i-amphtml-ssr"] = None
-            img_attrs = [
+            img_attrs: list[tuple[str, str | None]] = [
                 ("class", "i-amphtml-fill-content i-amphtml-replaced-content"),
                 ("decoding", "async"),
             ]
@@ -308,6 +308,8 @@ class AMPNode:
                     continue
 
                 attribute_value = self._other_attrs[attr_to_translate]
+                if attribute_value is None:
+                    continue
                 translator = TRANSLATIONS[attr_to_translate]
 
                 try:
