@@ -10,6 +10,8 @@ from enum import Enum
 from html.parser import HTMLParser
 from typing import NamedTuple
 
+from amp_renderer._compatibility import override
+
 
 class TransformationError(Exception):
     """An originalor to throw when attributes can't be converted to CSS."""
@@ -561,6 +563,7 @@ class AMPRenderer(HTMLParser):
         # Always keep charrefs intact; This class is meant to reproduce HTML.
         self.convert_charrefs = False
 
+    @override
     def reset(self) -> None:
         """Reset the state of the renderer so that it can be run again."""
         super().reset()
@@ -593,10 +596,12 @@ class AMPRenderer(HTMLParser):
         with contextlib.suppress(AttributeError):
             del self.no_boilerplate
 
+    @override
     def handle_decl(self, decl: str) -> None:
         """Process a declaration string."""
         self._result.append(f"<!{decl.lower()}>")
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Process a start tag."""
         tag = tag.lower()
@@ -787,6 +792,7 @@ class AMPRenderer(HTMLParser):
                 self._found_custom_element = True
                 self._translated_styles_index = len(self._result)
 
+    @override
     def handle_endtag(self, tag: str) -> None:
         """Process a closing tag."""
         tag = tag.lower()
@@ -842,18 +848,22 @@ class AMPRenderer(HTMLParser):
 
         self._result.append(f"</{tag}>")
 
+    @override
     def handle_data(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process HTML data."""
         self._add_data(data)
 
+    @override
     def handle_entityref(self, name: str) -> None:
         """Process an HTML entity."""
         self._add_data(f"&{name};")
 
+    @override
     def handle_charref(self, name: str) -> None:
         """Process a numbered HTML entity."""
         self._add_data(f"&#{name};")
 
+    @override
     def handle_comment(self, data: str) -> None:  # noqa: WPS110 (match HTMLParser signature)
         """Process an HTML comment."""
         if not self.strip_comments:
