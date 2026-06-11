@@ -22,14 +22,7 @@ class Translation(NamedTuple):
     """A CSS translation from an AMP attribute."""
 
     selector: str
-    statements: OrderedDict
-
-
-class Sizes(NamedTuple):
-    """Parsed sizes attribute."""
-
-    default: str
-    other: list
+    statements: OrderedDict[str | None, str]
 
 
 class Media(NamedTuple):
@@ -39,11 +32,18 @@ class Media(NamedTuple):
     value: str
 
 
+class Sizes(NamedTuple):
+    """Parsed sizes attribute."""
+
+    default: str
+    other: list[Media]
+
+
 class Sizer(NamedTuple):
     """Sizer element attributes."""
 
-    attrs: list
-    maybe_img_attrs: list | None
+    attrs: list[tuple[str, str | None]]
+    maybe_img_attrs: list[tuple[str, str | None]] | None
 
 
 class Translator:
