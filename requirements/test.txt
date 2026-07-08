@@ -1,4 +1,4 @@
 -r base.txt
 
-coverage==7.14.3
+coverage==7.15.0
 pytest==9.1.1
