@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Tests for AMPNode and related functionality."""
 
 from amp_renderer import AMPNode, Layout
