@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Server-side rendering for AMP HTML in Python."""
 
 import contextlib

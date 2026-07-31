@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Compatibility helpers across supported Python versions."""
 
 import sys
