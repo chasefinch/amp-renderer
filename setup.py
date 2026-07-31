@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Define metadata for AMP Renderer."""
 
 from pathlib import Path

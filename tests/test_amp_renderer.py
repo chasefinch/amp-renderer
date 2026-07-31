@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Tests for AMPRenderer and related functionality."""
 
 from amp_renderer import AMPRenderer

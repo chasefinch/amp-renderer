@@ -4,6 +4,9 @@ line-length = 99
 target-version = "py313"
 output-format = "grouped"
 
+# The axioms submodule isn't governed by this repo's style
+extend-exclude = ["axioms"]
+
 [format]
 quote-style = "double"
 
@@ -31,7 +34,6 @@ ignore = [
 	# amp-renderer-specific opt-outs
 	"C", "PLR09",  # Complexity rules
 	"PLR2004",  # Magic values
-	"CPY",  # Copyright text
 ]
 
 [lint.pycodestyle]

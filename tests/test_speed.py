@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Test the performance of AMP renderer with very large data sets."""
 
 from pathlib import Path

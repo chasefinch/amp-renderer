@@ -1,3 +1,4 @@
+# Copyright (C) 2020 Chase Finch
 """Test against the spec files from AMP Optimizer."""
 
 import re
