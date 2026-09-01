@@ -70,9 +70,9 @@ class Translator:
 
             query = f"{size_parts[0]})"
             query = query.replace(r"\s+", "")
-            value = size_parts[1]
+            media_value = size_parts[1]
 
-            media = Media(query=query, value=value)
+            media = Media(query=query, value=media_value)
             other.append(media)
 
         return Sizes(default=default, other=other)
@@ -587,7 +587,7 @@ class AMPRenderer(HTMLParser):
         self._is_render_paused = False
         self._is_render_cancelled = False
 
-        self._result = []
+        self._result: list[str] = []
         self._found_custom_element = False
         self._next_auto_id_num = 0
         self._translated_css_data = []
