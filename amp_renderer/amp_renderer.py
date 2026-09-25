@@ -435,13 +435,12 @@ class AMPNode:
         self._other_attrs["i-amphtml-layout"] = layout.value
 
         # Create sizer if necessary
-        create_sizer = (
+        if (
             isinstance(width, CSSLength)
             and isinstance(height, CSSLength)
             and width.numeral != 0
             and width.unit == height.unit
-        )
-        if create_sizer and isinstance(width, CSSLength) and isinstance(height, CSSLength):
+        ):
             if layout == LAYOUT_RESPONSIVE:
                 padding = (height.numeral / width.numeral) * 100
                 style = f"display:block;padding-top:{padding:.4f}%;"
