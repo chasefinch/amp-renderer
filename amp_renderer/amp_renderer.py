@@ -253,7 +253,7 @@ class AMPNode:
             if attr[0] == "id":
                 self.element_id = attr[1]
             elif attr[0] == "class":
-                self._classes = attr[1].split(" ") if attr[1] else []
+                self._classes = [] if attr[1] in {None, ""} else attr[1].split(" ")
             elif attr[0] == "style":
                 self._style = attr[1] or ""
             elif attr[0] == "hidden":
@@ -330,7 +330,7 @@ class AMPNode:
 
             if css_data_items:
                 used_auto_id = False
-                if not self.element_id:
+                if self.element_id in {None, ""}:
                     used_auto_id = True
                     self.element_id = potential_id
 
@@ -365,7 +365,7 @@ class AMPNode:
                     "amp-social-share": CSSLength(numeral=social_share_height_px, unit=UNIT_PX),
                 }[self.tag]
 
-        if not layout_value:
+        if layout_value in {None, ""}:
             width_is_set = isinstance(width, CSSLength)
             height_is_set = isinstance(height, CSSLength)
 
@@ -475,7 +475,7 @@ class AMPNode:
         """
         attrs = list(self._other_attrs.items())
 
-        if self.element_id:
+        if self.element_id not in {None, ""}:
             attrs.insert(0, ("id", self.element_id))
 
         if self._classes:
@@ -499,7 +499,7 @@ class AMPNode:
 
         This utility function is stateless.
         """
-        if not length:
+        if length is None or length == "":
             return None
 
         if length == "auto":
@@ -554,7 +554,7 @@ class AMPRenderer(HTMLParser):
         self.runtime_version = runtime_version
 
         self._is_test_mode = False
-        if not self.runtime_styles or not self.runtime_version:
+        if self.runtime_styles in {None, ""} or self.runtime_version in {None, ""}:
             self._is_test_mode = True
 
         self.trim_attrs = False
@@ -753,7 +753,7 @@ class AMPRenderer(HTMLParser):
             self._result.append("</i-amphtml-sizer>")
 
         # Add img if necessary
-        if maybe_img_attrs:
+        if maybe_img_attrs is not None:
             img_attr_strings = []
             for attr in maybe_img_attrs:
                 attr_name = attr[0].lower()
