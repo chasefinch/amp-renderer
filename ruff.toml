@@ -19,6 +19,7 @@ ignore = [
 	"COM812", "ISC001", "Q000", "Q003",  # Recommended when using formatter
 	"RUF100",  # Conflicts with WPS
 	"RUF102",  # Conflicts with WPS which uses unknown rule codes
+	"ICN",  # Import aliases conflict with WPS forbidden names
 	"ARG",  # Unused arguments often required in hierarchy
 	"ERA",  # Commented-out code is OK
 	"S105", "S106",  # Don't sniff for secrets
